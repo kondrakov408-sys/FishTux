@@ -356,6 +356,17 @@
 
       <div class="setting-row">
         <div class="setting-info">
+          <h4>Блокировка утечек IPv6 (IPv6 Leak Shield)</h4>
+          <p>Предотвращает прямое раскрытие реального IPv6 и MAC-адреса хоста в обход прокси</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="block_ipv6_leaks" {{CHECKED_BLOCK_IPV6_LEAKS}} onchange="saveSetting('block_ipv6_leaks', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
           <h4>Защита от фингерпринтинга (Canvas, WebGL & Audio)</h4>
           <p>Подмешивает незаметный шум в холст и маскирует модель GPU</p>
         </div>
@@ -526,7 +537,7 @@
       // Toggles
       const toggles = [
         'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
-        'webrtc_leak_protection', 'anti_fingerprinting', 'strip_tracking_urls',
+        'webrtc_leak_protection', 'block_ipv6_leaks', 'anti_fingerprinting', 'strip_tracking_urls',
         'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
         'clear_history_on_exit', 'clear_cache_on_exit'
       ];
@@ -625,7 +636,7 @@
       // All toggles
       const toggles = [
         'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
-        'webrtc_leak_protection', 'anti_fingerprinting', 'strip_tracking_urls',
+        'webrtc_leak_protection', 'block_ipv6_leaks', 'anti_fingerprinting', 'strip_tracking_urls',
         'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
         'clear_history_on_exit', 'clear_cache_on_exit'
       ];

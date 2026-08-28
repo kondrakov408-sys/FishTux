@@ -136,6 +136,7 @@ class TuxSchemeHandler(QWebEngineUrlSchemeHandler):
             "CHECKED_HTTPS_ONLY": "checked" if s.get("https_only", True) else "",
             "CHECKED_BLOCK_THIRD_PARTY_COOKIES": "checked" if s.get("block_third_party_cookies", True) else "",
             "CHECKED_WEBRTC_LEAK_PROTECTION": "checked" if s.get("webrtc_leak_protection", True) else "",
+            "CHECKED_BLOCK_IPV6_LEAKS": "checked" if s.get("block_ipv6_leaks", True) else "",
             "CHECKED_ANTI_FINGERPRINTING": "checked" if s.get("anti_fingerprinting", True) else "",
             "CHECKED_STRIP_TRACKING_URLS": "checked" if s.get("strip_tracking_urls", True) else "",
             "CHECKED_SPOOF_TIMEZONE": "checked" if s.get("spoof_timezone", True) else "",

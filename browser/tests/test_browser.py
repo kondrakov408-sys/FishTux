@@ -147,6 +147,7 @@ class TestTuxSchemeHandler(unittest.TestCase):
         self.assertIn("Настройки", settings_html)
         self.assertIn("saveAllSettings", settings_html)
         self.assertIn("saveAllBtnTop", settings_html)
+        self.assertIn("block_ipv6_leaks", settings_html)
 
         about_html = self.handler._render_page("about").decode("utf-8")
         self.assertIn("TuxBrowser", about_html)
@@ -182,6 +183,13 @@ class TestTuxPrivacyFeatures(unittest.TestCase):
         self.assertIn("doNotTrack", ANTI_FINGERPRINT_JS)
         self.assertIn("toDataURL", ANTI_FINGERPRINT_JS)
         self.assertIn("getBattery", ANTI_FINGERPRINT_JS)
+
+    def test_ipv6_setting_default(self):
+        temp_dir = tempfile.mkdtemp()
+        storage = TuxStorage(data_dir=temp_dir)
+        self.assertTrue(storage.get_setting("block_ipv6_leaks", True))
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 class TestTuxGhostManager(unittest.TestCase):

@@ -233,7 +233,15 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
         if first_party_domain and req_domain and req_domain != first_party_domain:
             info.setHttpHeader(b"Referer", b"")
 
-        # 5. Ad & Tracker Blocking
+        # 5. IPv6 Leak Shield: block raw unproxied direct IPv6 requests
+        if self.storage.get_setting("block_ipv6_leaks", True):
+            req_host = info.requestUrl().host()
+            if req_host.startswith("[") or (":" in req_host and not req_host.startswith("127.") and req_host != "localhost"):
+                if not (self.ghost_manager and self.ghost_manager.is_ghost_active):
+                    info.block(True)
+                    return
+
+        # 6. Ad & Tracker Blocking
         block_trackers = self.storage.get_setting("block_trackers", True)
         block_ads = self.storage.get_setting("block_ads", True)
 

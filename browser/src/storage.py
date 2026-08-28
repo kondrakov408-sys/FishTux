@@ -74,6 +74,7 @@ class TuxStorage:
             "javascript_enabled": True,
             "do_not_track": True,
             "webrtc_leak_protection": True,
+            "block_ipv6_leaks": True,
             "anti_fingerprinting": True,
             "strip_tracking_urls": True,
             "spoof_timezone": True,
