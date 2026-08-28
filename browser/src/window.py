@@ -199,6 +199,7 @@ class TuxBrowserWindow(QMainWindow):
             self.ghost_manager.status_changed.connect(self._update_ghost_ui)
             self.ghost_manager.ip_updated.connect(self._on_ip_updated)
             self.ghost_manager.tz_updated.connect(self._on_tz_updated)
+            self.ghost_manager.lang_updated.connect(self._on_lang_updated)
             self.ghost_manager.tor_error.connect(self._on_tor_error)
             self._update_ghost_ui(self.ghost_manager.get_status())
 
@@ -861,11 +862,28 @@ class TuxBrowserWindow(QMainWindow):
 
     def _on_tz_updated(self, tz: str):
         if tz:
-            install_privacy_scripts(self.profile, tz)
+            active_lang = self.storage.get_setting("active_language", "en-US")
+            active_langs = self.storage.get_setting("active_languages", ["en-US", "en"])
+            install_privacy_scripts(self.profile, tz, active_lang, active_langs)
             print(f"[TuxGhost] Precision Timezone Aligned to IP GeoIP -> {tz}")
             try:
                 from browser.src.privacy_scripts import get_anti_fingerprint_js
-                js_code = get_anti_fingerprint_js(tz)
+                js_code = get_anti_fingerprint_js(tz, active_lang, active_langs)
+                for i in range(self.tab_widget.count()):
+                    tab = self.tab_widget.widget(i)
+                    if tab and hasattr(tab, "page") and tab.page():
+                        tab.page().runJavaScript(js_code)
+            except Exception:
+                pass
+
+    def _on_lang_updated(self, primary_lang: str, languages: list):
+        if primary_lang:
+            active_tz = self.storage.get_setting("active_timezone", "Europe/Amsterdam")
+            install_privacy_scripts(self.profile, active_tz, primary_lang, languages)
+            print(f"[TuxGhost] Precision Language Aligned to IP GeoIP -> {primary_lang}")
+            try:
+                from browser.src.privacy_scripts import get_anti_fingerprint_js
+                js_code = get_anti_fingerprint_js(active_tz, primary_lang, languages)
                 for i in range(self.tab_widget.count()):
                     tab = self.tab_widget.widget(i)
                     if tab and hasattr(tab, "page") and tab.page():

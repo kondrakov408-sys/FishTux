@@ -159,7 +159,9 @@ def main():
     # Apply Privacy & Network Settings on profile
     from browser.src.privacy_scripts import install_privacy_scripts
     saved_tz = storage.get_setting("active_timezone", "Europe/Amsterdam")
-    install_privacy_scripts(profile, saved_tz)
+    saved_lang = storage.get_setting("active_language", "en-US")
+    saved_langs = storage.get_setting("active_languages", ["en-US", "en"])
+    install_privacy_scripts(profile, saved_tz, saved_lang, saved_langs)
 
     # Disable DNS leaks, hyperlink ping tracking, and restrict WebRTC to public interfaces only
     p_settings = profile.settings()

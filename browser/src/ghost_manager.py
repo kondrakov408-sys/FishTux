@@ -18,6 +18,55 @@ from urllib.request import Request, ProxyHandler, build_opener
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtNetwork import QNetworkProxy
 
+COUNTRY_LANG_MAP = {
+    "SE": ("sv-SE", ["sv-SE", "sv", "en-US", "en"]),
+    "DE": ("de-DE", ["de-DE", "de", "en-US", "en"]),
+    "FR": ("fr-FR", ["fr-FR", "fr", "en-US", "en"]),
+    "IT": ("it-IT", ["it-IT", "it", "en-US", "en"]),
+    "ES": ("es-ES", ["es-ES", "es", "en-US", "en"]),
+    "NL": ("nl-NL", ["nl-NL", "nl", "en-US", "en"]),
+    "PL": ("pl-PL", ["pl-PL", "pl", "en-US", "en"]),
+    "RU": ("ru-RU", ["ru-RU", "ru", "en-US", "en"]),
+    "UA": ("uk-UA", ["uk-UA", "uk", "en-US", "en"]),
+    "BY": ("be-BY", ["be-BY", "be", "ru", "en-US", "en"]),
+    "KZ": ("kk-KZ", ["kk-KZ", "kk", "ru", "en-US", "en"]),
+    "AT": ("de-AT", ["de-AT", "de", "en-US", "en"]),
+    "CH": ("de-CH", ["de-CH", "de", "fr", "en-US", "en"]),
+    "GB": ("en-GB", ["en-GB", "en-US", "en"]),
+    "US": ("en-US", ["en-US", "en"]),
+    "CA": ("en-CA", ["en-CA", "en-US", "fr-CA", "en"]),
+    "AU": ("en-AU", ["en-AU", "en-US", "en"]),
+    "JP": ("ja-JP", ["ja-JP", "ja", "en-US", "en"]),
+    "KR": ("ko-KR", ["ko-KR", "ko", "en-US", "en"]),
+    "CN": ("zh-CN", ["zh-CN", "zh", "en-US", "en"]),
+    "BR": ("pt-BR", ["pt-BR", "pt", "en-US", "en"]),
+    "TR": ("tr-TR", ["tr-TR", "tr", "en-US", "en"]),
+    "FI": ("fi-FI", ["fi-FI", "fi", "en-US", "en"]),
+    "NO": ("nb-NO", ["nb-NO", "no", "nn", "en-US", "en"]),
+    "DK": ("da-DK", ["da-DK", "da", "en-US", "en"]),
+    "CZ": ("cs-CZ", ["cs-CZ", "cs", "en-US", "en"]),
+    "RO": ("ro-RO", ["ro-RO", "ro", "en-US", "en"]),
+    "HU": ("hu-HU", ["hu-HU", "hu", "en-US", "en"]),
+    "GR": ("el-GR", ["el-GR", "el", "en-US", "en"]),
+    "PT": ("pt-PT", ["pt-PT", "pt", "en-US", "en"]),
+    "BG": ("bg-BG", ["bg-BG", "bg", "en-US", "en"]),
+    "IN": ("en-IN", ["en-IN", "hi", "en-GB", "en"]),
+    "IL": ("he-IL", ["he-IL", "he", "en-US", "en"]),
+    "SG": ("en-SG", ["en-SG", "zh-SG", "en"]),
+    "MX": ("es-MX", ["es-MX", "es", "en-US", "en"]),
+    "AR": ("es-AR", ["es-AR", "es", "en-US", "en"]),
+    "CL": ("es-CL", ["es-CL", "es", "en-US", "en"]),
+    "BE": ("nl-BE", ["nl-BE", "fr-BE", "nl", "fr", "en-US", "en"]),
+}
+
+
+def get_country_languages(country_code: str) -> Tuple[str, list]:
+    """Resolves primary language and language fallback list for a country code."""
+    code = (country_code or "").upper().strip()
+    if code in COUNTRY_LANG_MAP:
+        return COUNTRY_LANG_MAP[code]
+    return ("en-US", ["en-US", "en"])
+
 
 class TuxGhostManager(QObject):
     """Manages ghost network routing, Tor lifecycle, and identity rotation."""
@@ -25,6 +74,7 @@ class TuxGhostManager(QObject):
     status_changed = Signal(dict)
     ip_updated = Signal(str, str) # ip, country
     tz_updated = Signal(str)      # timezone (e.g. Europe/Amsterdam)
+    lang_updated = Signal(str, list) # primary_lang, languages_list
     tor_error = Signal(str)
 
     def __init__(self, storage, base_data_dir: str):
@@ -157,7 +207,10 @@ class TuxGhostManager(QObject):
             f"DataDirectory {self.data_dir}",
             "Log notice stdout",
             "ClientOnly 1",
-            "AvoidDiskWrites 1"
+            "AvoidDiskWrites 1",
+            "ClientPreferIPv6ORPort 0",
+            "ClientPreferIPv6DirPort 0",
+            "ClientAutoIPv6ORPort 0"
         ]
 
         if self.tor_bridges and self.tor_bridges.strip():
@@ -466,43 +519,77 @@ class TuxGhostManager(QObject):
     def _check_ip_worker(self) -> None:
         ip = ""
         country = ""
+        country_code = ""
         timezone = ""
 
         endpoints = [
-            ("https://ipwho.is/", lambda d: (d.get("ip", ""), d.get("country", ""), d.get("timezone", {}).get("id", "") if isinstance(d.get("timezone"), dict) else d.get("timezone", ""))),
-            ("https://ipinfo.io/json", lambda d: (d.get("ip", ""), d.get("country", ""), d.get("timezone", ""))),
-            ("https://freeipapi.com/api/json", lambda d: (d.get("ipAddress", ""), d.get("countryName", ""), d.get("timeZone", ""))),
-            ("http://ip-api.com/json", lambda d: (d.get("query", ""), d.get("country", ""), d.get("timezone", ""))),
-            ("https://ipapi.co/json/", lambda d: (d.get("ip", ""), d.get("country_name", ""), d.get("timezone", "")))
+            ("https://ipwho.is/", lambda d: (
+                d.get("ip", ""),
+                d.get("country", ""),
+                d.get("country_code", ""),
+                d.get("timezone", {}).get("id", "") if isinstance(d.get("timezone"), dict) else d.get("timezone", "")
+            )),
+            ("https://ipinfo.io/json", lambda d: (
+                d.get("ip", ""),
+                d.get("country", ""),
+                d.get("country", ""),
+                d.get("timezone", "")
+            )),
+            ("https://freeipapi.com/api/json", lambda d: (
+                d.get("ipAddress", ""),
+                d.get("countryName", ""),
+                d.get("countryCode", ""),
+                d.get("timeZone", "")
+            )),
+            ("http://ip-api.com/json", lambda d: (
+                d.get("query", ""),
+                d.get("country", ""),
+                d.get("countryCode", ""),
+                d.get("timezone", "")
+            )),
+            ("https://ipapi.co/json/", lambda d: (
+                d.get("ip", ""),
+                d.get("country_name", ""),
+                d.get("country_code", ""),
+                d.get("timezone", "")
+            ))
         ]
 
         for url, parser in endpoints:
             try:
                 data = self._fetch_geoip_json(url)
                 if data and isinstance(data, dict):
-                    parsed_ip, parsed_country, parsed_tz = parser(data)
+                    parsed_ip, parsed_country, parsed_code, parsed_tz = parser(data)
                     if parsed_ip:
                         ip = parsed_ip
                         if parsed_country:
                             country = parsed_country
+                        if parsed_code:
+                            country_code = parsed_code
                         if parsed_tz:
                             timezone = parsed_tz
                         break
             except Exception:
                 continue
 
-        # If IP was detected but timezone is missing, query direct IP lookup
-        if ip and not timezone:
+        # If IP was detected but timezone/country_code is missing, query direct IP lookup
+        if ip and (not timezone or not country_code):
             for fallback_url, parser in [
-                (f"https://ipwho.is/{ip}", lambda d: d.get("timezone", {}).get("id", "") if isinstance(d.get("timezone"), dict) else d.get("timezone", "")),
-                (f"https://ipinfo.io/{ip}/json", lambda d: d.get("timezone", ""))
+                (f"https://ipwho.is/{ip}", lambda d: (
+                    d.get("timezone", {}).get("id", "") if isinstance(d.get("timezone"), dict) else d.get("timezone", ""),
+                    d.get("country_code", "")
+                )),
+                (f"https://ipinfo.io/{ip}/json", lambda d: (d.get("timezone", ""), d.get("country", "")))
             ]:
                 try:
                     data = self._fetch_geoip_json(fallback_url)
                     if data and isinstance(data, dict):
-                        tz_val = parser(data)
-                        if tz_val:
+                        tz_val, code_val = parser(data)
+                        if tz_val and not timezone:
                             timezone = tz_val
+                        if code_val and not country_code:
+                            country_code = code_val
+                        if timezone and country_code:
                             break
                 except Exception:
                     pass
@@ -522,6 +609,13 @@ class TuxGhostManager(QObject):
             self.storage.set_setting("active_timezone", timezone)
             self.tz_updated.emit(timezone)
             print(f"[TuxGhost] Precision Timezone Aligned to IP GeoIP -> {timezone}")
+
+        if country_code:
+            primary_lang, languages = get_country_languages(country_code)
+            self.storage.set_setting("active_language", primary_lang)
+            self.storage.set_setting("active_languages", languages)
+            self.lang_updated.emit(primary_lang, languages)
+            print(f"[TuxGhost] Precision Language Aligned to IP GeoIP ({country_code}) -> {primary_lang} ({languages})")
 
         self.ip_updated.emit(self.last_detected_ip, self.last_detected_country)
         self._emit_status()

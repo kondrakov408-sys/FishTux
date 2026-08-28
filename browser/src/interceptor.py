@@ -224,22 +224,27 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
             info.setHttpHeader(b"DNT", b"1")
             info.setHttpHeader(b"Sec-GPC", b"1")
 
-        # 3. Locale & Language Masking (en-US)
+        # 3. Locale & Language Masking aligned with active GeoIP
         if self.storage.get_setting("spoof_timezone", True):
-            info.setHttpHeader(b"Accept-Language", b"en-US,en;q=0.9")
+            active_lang = self.storage.get_setting("active_language", "en-US")
+            short_lang = active_lang.split("-")[0]
+            if short_lang == "en":
+                header_val = "en-US,en;q=0.9"
+            else:
+                header_val = f"{active_lang},{short_lang};q=0.9,en-US;q=0.8,en;q=0.7"
+            info.setHttpHeader(b"Accept-Language", header_val.encode("utf-8"))
 
         # 4. Referrer Leak Protection on 3rd-party requests
         req_domain = self._get_domain(url)
         if first_party_domain and req_domain and req_domain != first_party_domain:
             info.setHttpHeader(b"Referer", b"")
 
-        # 5. IPv6 Leak Shield: block raw unproxied direct IPv6 requests
+        # 5. IPv6 Leak Shield: block raw unproxied direct IPv6 requests & dual-stack IPv6 probes
         if self.storage.get_setting("block_ipv6_leaks", True):
-            req_host = info.requestUrl().host()
-            if req_host.startswith("[") or (":" in req_host and not req_host.startswith("127.") and req_host != "localhost"):
-                if not (self.ghost_manager and self.ghost_manager.is_ghost_active):
-                    info.block(True)
-                    return
+            req_host = info.requestUrl().host().lower()
+            if req_host.startswith("[") or (":" in req_host and not req_host.startswith("127.") and req_host != "localhost") or "ipv6." in req_host or req_host.startswith("ipv6."):
+                info.block(True)
+                return
 
         # 6. Ad & Tracker Blocking
         block_trackers = self.storage.get_setting("block_trackers", True)

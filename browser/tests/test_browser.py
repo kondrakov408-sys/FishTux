@@ -343,6 +343,27 @@ class TestTimezoneSpoofing(unittest.TestCase):
         self.assertEqual(data["date"], 29)
         self.assertEqual(data["offset"], -540)
 
+    def test_language_alignment(self):
+        import subprocess, json
+        from browser.src.privacy_scripts import get_anti_fingerprint_js
+
+        tz = "Europe/Stockholm"
+        lang = "sv-SE"
+        langs = ["sv-SE", "sv", "en-US", "en"]
+        js = get_anti_fingerprint_js(tz, lang, langs)
+        test_script = js + """
+        const results = {
+            "lang": navigator.language,
+            "languages": navigator.languages
+        };
+        console.log(JSON.stringify(results));
+        """
+        res = subprocess.run(["node", "-e", test_script], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, f"Node script error: {res.stderr}")
+        data = json.loads(res.stdout.strip())
+        self.assertEqual(data["lang"], "sv-SE")
+        self.assertEqual(data["languages"], ["sv-SE", "sv", "en-US", "en"])
+
 
 if __name__ == "__main__":
     unittest.main()

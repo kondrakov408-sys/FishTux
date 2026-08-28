@@ -3,11 +3,23 @@ TuxBrowser - Anti-Fingerprinting & Privacy Scripts Engine
 Injects sandboxed scripts into web pages to defeat Canvas, Audio, WebRTC, Hardware, and Timezone fingerprinting.
 """
 
+import json
 from PySide6.QtWebEngineCore import QWebEngineScript, QWebEngineProfile
 
 
-def get_anti_fingerprint_js(target_tz: str = "Europe/Amsterdam") -> str:
-    """Generates the full anti-fingerprint JS payload with dynamic GeoIP Timezone matching."""
+def get_anti_fingerprint_js(
+    target_tz: str = "Europe/Amsterdam",
+    target_lang: str = "en-US",
+    target_languages: list = None
+) -> str:
+    """Generates the full anti-fingerprint JS payload with dynamic GeoIP Timezone and Language matching."""
+    if not target_languages:
+        short = target_lang.split("-")[0]
+        target_languages = [target_lang, short, "en-US", "en"]
+        target_languages = list(dict.fromkeys(target_languages))
+
+    langs_json = json.dumps(target_languages)
+
     return f"""
 (function() {{
     'use strict';
@@ -61,8 +73,8 @@ def get_anti_fingerprint_js(target_tz: str = "Europe/Amsterdam") -> str:
         makeNativeGetter(Navigator.prototype, 'deviceMemory', 8);
         makeNativeGetter(Navigator.prototype, 'globalPrivacyControl', true);
         makeNativeGetter(Navigator.prototype, 'doNotTrack', '1');
-        makeNativeGetter(Navigator.prototype, 'language', 'en-US');
-        makeNativeGetter(Navigator.prototype, 'languages', Object.freeze(['en-US', 'en']));
+        makeNativeGetter(Navigator.prototype, 'language', '{target_lang}');
+        makeNativeGetter(Navigator.prototype, 'languages', Object.freeze({langs_json}));
     }} catch(e) {{}}
 
     // 2. Iframe Interception (Neutralizes clean-iframe prototype reflection attacks)
@@ -75,8 +87,8 @@ def get_anti_fingerprint_js(target_tz: str = "Europe/Amsterdam") -> str:
                 if (w.Navigator && w.Navigator.prototype) {{
                     makeNativeGetter(w.Navigator.prototype, 'hardwareConcurrency', 4);
                     makeNativeGetter(w.Navigator.prototype, 'deviceMemory', 8);
-                    makeNativeGetter(w.Navigator.prototype, 'language', 'en-US');
-                    makeNativeGetter(w.Navigator.prototype, 'languages', Object.freeze(['en-US', 'en']));
+                    makeNativeGetter(w.Navigator.prototype, 'language', '{target_lang}');
+                    makeNativeGetter(w.Navigator.prototype, 'languages', Object.freeze({langs_json}));
                 }}
             }} catch(e) {{}}
         }};
@@ -102,7 +114,8 @@ def get_anti_fingerprint_js(target_tz: str = "Europe/Amsterdam") -> str:
             try {{
                 Object.defineProperty(navigator, 'hardwareConcurrency', {{ value: 4, configurable: true }});
                 Object.defineProperty(navigator, 'deviceMemory', {{ value: 8, configurable: true }});
-                Object.defineProperty(navigator, 'language', {{ value: 'en-US', configurable: true }});
+                Object.defineProperty(navigator, 'language', {{ value: '{target_lang}', configurable: true }});
+                Object.defineProperty(navigator, 'languages', {{ value: {langs_json}, configurable: true }});
             }} catch(e) {{}}
         `;
         const origWorker = window.Worker;
@@ -421,10 +434,15 @@ def get_anti_fingerprint_js(target_tz: str = "Europe/Amsterdam") -> str:
 """
 
 
-ANTI_FINGERPRINT_JS = get_anti_fingerprint_js("Europe/Amsterdam")
+ANTI_FINGERPRINT_JS = get_anti_fingerprint_js("Europe/Amsterdam", "en-US")
 
 
-def install_privacy_scripts(profile: QWebEngineProfile, target_tz: str = "Europe/Amsterdam"):
+def install_privacy_scripts(
+    profile: QWebEngineProfile,
+    target_tz: str = "Europe/Amsterdam",
+    target_lang: str = "en-US",
+    target_languages: list = None
+):
     """Installs the anti-fingerprinting script globally into the WebEngine profile."""
     # Remove existing script if any
     scripts = profile.scripts()
@@ -435,7 +453,7 @@ def install_privacy_scripts(profile: QWebEngineProfile, target_tz: str = "Europe
 
     script = QWebEngineScript()
     script.setName("TuxAntiFingerprintShield")
-    script.setSourceCode(get_anti_fingerprint_js(target_tz))
+    script.setSourceCode(get_anti_fingerprint_js(target_tz, target_lang, target_languages))
     script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation)
     script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld)
     script.setRunsOnSubFrames(True)
