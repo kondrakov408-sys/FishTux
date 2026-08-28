@@ -208,9 +208,7 @@ class TuxGhostManager(QObject):
             "Log notice stdout",
             "ClientOnly 1",
             "AvoidDiskWrites 1",
-            "ClientPreferIPv6ORPort 0",
-            "ClientPreferIPv6DirPort 0",
-            "ClientAutoIPv6ORPort 0"
+            "ClientUseIPv6 1"
         ]
 
         if self.tor_bridges and self.tor_bridges.strip():
@@ -289,8 +287,11 @@ class TuxGhostManager(QObject):
             except Exception:
                 pass
 
-            # Prepare PATH environment so Tor child processes can locate binaries
+            # Prepare PATH environment and clean proxy variables so PT connects directly
             tor_env = os.environ.copy()
+            for var in ["http_proxy", "https_proxy", "all_proxy", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "socks_proxy", "SOCKS_PROXY"]:
+                tor_env.pop(var, None)
+
             current_path = tor_env.get("PATH", "")
             extra_paths = [os.path.expanduser("~/.local/bin"), "/usr/local/bin", "/usr/bin", "/bin"]
             for ep in extra_paths:
