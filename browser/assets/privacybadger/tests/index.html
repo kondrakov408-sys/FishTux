@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+ - This file is part of Privacy Badger <https://privacybadger.org/>
+ - Copyright (C) 2014 Electronic Frontier Foundation
+ -
+ - Derived from Adblock Plus
+ - Copyright (C) 2006-2013 Eyeo GmbH
+ -
+ - Privacy Badger is free software: you can redistribute it and/or modify
+ - it under the terms of the GNU General Public License version 3 as
+ - published by the Free Software Foundation.
+ -
+ - Privacy Badger is distributed in the hope that it will be useful,
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ - GNU General Public License for more details.
+ -
+ - You should have received a copy of the GNU General Public License
+ - along with Privacy Badger.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+
+    <title>Privacy Badger unit tests</title>
+
+    <link rel="stylesheet" href="lib/vendor/qunit-2.24.3.css"/>
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+
+    <script src="../lib/vendor/jquery-3.7.1.js"></script>
+
+    <script src="lib/vendor/qunit-2.24.3.js"></script>
+    <script src="lib/qunit_config.js"></script>
+    <script src="lib/vendor/sinon-2.0.0.js"></script>
+
+    <script type="module" src="../js/background.js"></script>
+
+    <script type="module" src="tests/background.js"></script>
+    <script type="module" src="tests/firstparties.js"></script>
+    <script type="module" src="tests/heuristic.js"></script>
+    <script type="module" src="tests/htmlutils.js"></script>
+    <script type="module" src="tests/multiDomainFirstParties.js"></script>
+    <script type="module" src="tests/options.js"></script>
+    <script type="module" src="tests/storage.js"></script>
+    <script type="module" src="tests/tabData.js"></script>
+    <!-- URL/host tools: --><script type="module" src="tests/baseDomain.js"></script>
+    <script type="module" src="tests/utils.js"></script>
+    <script type="module" src="tests/yellowlist.js"></script>
+  </body>
+</html>

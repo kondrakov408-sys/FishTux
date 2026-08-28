@@ -5,7 +5,10 @@ Provides the full browser UI: tabs, omnibox, security badges, bookmark bar, find
 
 import os
 import sys
-from urllib.parse import urlparse
+import time
+import shutil
+import subprocess
+from urllib.parse import urlparse, quote_plus
 from typing import List, Optional
 
 from PySide6.QtWidgets import (
@@ -16,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QUrl, QSize, QPoint, QTimer
 from PySide6.QtGui import QIcon, QKeySequence, QShortcut, QAction, QColor, QFont
+from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWebEngineCore import (
     QWebEngineProfile,
     QWebEngineSettings,
@@ -33,189 +37,35 @@ from browser.src.privacy_scripts import install_privacy_scripts
 
 
 class PrivacyBadgerPopover(QDialog):
-    """Interactive EFF Privacy Badger popover showing real-time tracker heuristics and controls."""
+    """Interactive EFF Privacy Badger popover rendered via WebEngine."""
 
-    def __init__(self, domain: str, security_status: str, blocked_count: int, storage, interceptor, assets_dir: str, parent=None):
+    def __init__(self, profile: QWebEngineProfile, domain: str, security_status: str, blocked_count: int, storage, interceptor, assets_dir: str, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.domain = domain
-        self.security_status = security_status
         self.storage = storage
-        self.interceptor = interceptor
-        self.assets_dir = assets_dir
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
-        self.setFixedWidth(380)
-
-        is_whitelisted = storage.is_domain_whitelisted(domain) if domain else False
-        badger_icon_name = "badger-48.png" if not is_whitelisted else "badger-32-disabled.png"
-        badger_icon_path = get_icon_path(assets_dir, badger_icon_name)
+        self.setFixedSize(394, 460)
 
         self.setStyleSheet("""
             QDialog {
-                background-color: #1b1c20;
-                border: 1.5px solid #38383d;
+                background-color: #ffffff;
+                border: 2px solid #94a3b8;
                 border-radius: 12px;
-                padding: 14px;
-                color: #fbfbfe;
-            }
-            QPushButton {
-                background-color: #2b2a33;
-                border: 1px solid #42414d;
-                border-radius: 6px;
-                color: #fbfbfe;
-                padding: 6px 12px;
-                font-weight: 500;
-            }
-            QPushButton:hover {
-                border-color: #f59e0b;
-                background-color: #38383d;
-            }
-            QPushButton#toggleBtnOn {
-                background-color: #059669;
-                border: 1px solid #10b981;
-                color: #ffffff;
-                font-weight: bold;
-            }
-            QPushButton#toggleBtnOn:hover {
-                background-color: #047857;
-            }
-            QPushButton#toggleBtnOff {
-                background-color: #dc2626;
-                border: 1px solid #ef4444;
-                color: #ffffff;
-                font-weight: bold;
-            }
-            QPushButton#toggleBtnOff:hover {
-                background-color: #b91c1c;
-            }
-            QScrollArea {
-                border: 1px solid #2b2a33;
-                background-color: #131417;
-                border-radius: 8px;
             }
         """)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setSpacing(0)
 
-        # 1. Header with Privacy Badger Mascot
-        header = QHBoxLayout()
-        header.setSpacing(10)
-        
-        icon_lbl = QLabel(self)
-        if os.path.exists(badger_icon_path):
-            icon_lbl.setPixmap(QIcon(badger_icon_path).pixmap(38, 38))
-        header.addWidget(icon_lbl)
+        self.web_view = QWebEngineView(self)
+        self.web_view.setPage(QWebEnginePage(profile, self.web_view))
+        self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
+        self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.ScrollAnimatorEnabled, True)
 
-        title_box = QVBoxLayout()
-        title_box.setSpacing(2)
-        badger_title = QLabel("<b>Privacy Badger</b>", self)
-        badger_title.setStyleSheet("font-size: 16px; color: #fbfbfe; font-weight: 800;")
-        eff_subtitle = QLabel("<span style='color: #f59e0b; font-weight: bold;'>EFF</span> • Электронный рубеж (v2026.8.7)", self)
-        eff_subtitle.setStyleSheet("font-size: 11px; color: #94a3b8;")
-        title_box.addWidget(badger_title)
-        title_box.addWidget(eff_subtitle)
-        header.addLayout(title_box)
-        header.addStretch()
-
-        layout.addLayout(header)
-
-        # 2. Domain & Badger State Toggle
-        site_card = QFrame(self)
-        site_card.setStyleSheet("background-color: #232429; border-radius: 8px; padding: 6px;")
-        site_layout = QVBoxLayout(site_card)
-        site_layout.setSpacing(6)
-        
-        domain_lbl = QLabel(f"Сайт: <b>{domain or 'Внутренняя песочница'}</b>", self)
-        domain_lbl.setStyleSheet("font-size: 12px; color: #e2e8f0;")
-        site_layout.addWidget(domain_lbl)
-
-        if domain:
-            self.toggle_btn = QPushButton()
-            if not is_whitelisted:
-                self.toggle_btn.setObjectName("toggleBtnOn")
-                self.toggle_btn.setText("🛡️ Privacy Badger активен на этом сайте")
-            else:
-                self.toggle_btn.setObjectName("toggleBtnOff")
-                self.toggle_btn.setText("⚠️ Защита отключена для этого сайта")
-            self.toggle_btn.clicked.connect(self._toggle_whitelist)
-            site_layout.addWidget(self.toggle_btn)
-        layout.addWidget(site_card)
-
-        # 3. Trackers List & Heuristics
-        trackers = self.interceptor.get_detected_trackers(domain) if domain else []
-        t_header = QLabel(f"🦡 <b>Обнаружено скрытых трекеров: {len(trackers) or blocked_count}</b>")
-        t_header.setStyleSheet("color: #f59e0b; font-size: 13px; margin-top: 4px;")
-        layout.addWidget(t_header)
-
-        if trackers:
-            scroll = QScrollArea(self)
-            scroll.setWidgetResizable(True)
-            scroll.setMaximumHeight(140)
-            
-            scroll_content = QWidget()
-            scroll_layout = QVBoxLayout(scroll_content)
-            scroll_layout.setSpacing(6)
-            scroll_layout.setContentsMargins(6, 6, 6, 6)
-
-            for tr in trackers:
-                row = QHBoxLayout()
-                tr_lbl = QLabel(f"• {tr}", scroll_content)
-                tr_lbl.setStyleSheet("color: #cbd5e1; font-size: 11px;")
-                
-                badge = QLabel("🔴 Заблокирован", scroll_content)
-                badge.setStyleSheet("color: #ef4444; font-size: 10px; font-weight: bold; background: #3b1414; padding: 2px 6px; border-radius: 4px;")
-                
-                row.addWidget(tr_lbl)
-                row.addStretch()
-                row.addWidget(badge)
-                scroll_layout.addLayout(row)
-
-            scroll.setWidget(scroll_content)
-            layout.addWidget(scroll)
-        else:
-            no_trackers = QLabel("🎉 <i>Privacy Badger не обнаружил сторонних трекеров на этой странице.</i>")
-            no_trackers.setStyleSheet("color: #10b981; font-size: 11px; padding: 6px;")
-            no_trackers.setWordWrap(True)
-            layout.addWidget(no_trackers)
-
-        # 4. GPC & SSL Info
-        info_row = QHBoxLayout()
-        gpc_lbl = QLabel("✓ GPC / DNT активны", self)
-        gpc_lbl.setStyleSheet("color: #10b981; font-size: 11px; font-weight: 600;")
-        info_row.addWidget(gpc_lbl)
-        
-        info_row.addStretch()
-        if security_status == "secure":
-            ssl_lbl = QLabel("🔒 HTTPS", self)
-            ssl_lbl.setStyleSheet("color: #10b981; font-size: 11px;")
-        else:
-            ssl_lbl = QLabel("⚠️ HTTP", self)
-            ssl_lbl.setStyleSheet("color: #ef4444; font-size: 11px;")
-        info_row.addWidget(ssl_lbl)
-        layout.addLayout(info_row)
-
-        # 5. Buttons
-        btn_box = QHBoxLayout()
-        stats_btn = QPushButton("⚙️ Настройки и База EFF")
-        stats_btn.clicked.connect(self._open_stats)
-        btn_box.addWidget(stats_btn)
-
-        close_btn = QPushButton("Закрыть")
-        close_btn.clicked.connect(self.close)
-        btn_box.addWidget(close_btn)
-        layout.addLayout(btn_box)
-
-    def _toggle_whitelist(self):
-        self.storage.toggle_domain_whitelist(self.domain)
-        self.close()
-        if self.parent():
-            self.parent().reload_current_tab()
-
-    def _open_stats(self):
-        self.close()
-        if self.parent():
-            self.parent().open_url("tux://shield")
+        popup_url = f"tux://badger-popup?domain={quote_plus(domain)}"
+        self.web_view.load(QUrl(popup_url))
+        layout.addWidget(self.web_view)
 
 
 TuxShieldPopover = PrivacyBadgerPopover
@@ -831,9 +681,8 @@ class TuxBrowserWindow(QMainWindow):
         if not tab:
             return
         domain = tab.current_domain
-        count = self.interceptor.get_blocked_count(domain)
-        popover = PrivacyBadgerPopover(domain, tab.security_status, count, self.storage, self.interceptor, self.assets_dir, self)
-        pos = self.omnibox.mapToGlobal(QPoint(max(0, self.omnibox.width() - 390), self.omnibox.height() + 4))
+        popover = PrivacyBadgerPopover(self.profile, domain, tab.security_status, count, self.storage, self.interceptor, self.assets_dir, self)
+        pos = self.omnibox.mapToGlobal(QPoint(max(0, self.omnibox.width() - 395), self.omnibox.height() + 4))
         popover.move(pos)
         popover.exec()
 

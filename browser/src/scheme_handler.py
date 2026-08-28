@@ -111,6 +111,54 @@ class TuxSchemeHandler(QWebEngineUrlSchemeHandler):
             "WHITELIST_TAGS": wl_html
         })
 
+    def _render_badger_popup(self, domain: str) -> bytes:
+        import html as html_lib
+        domain = domain.strip() if domain else ""
+        is_whitelisted = self.storage.is_domain_whitelisted(domain) if domain else False
+        
+        if not domain:
+            status_msg = "Внутренняя изолированная страница FishTux (Zero-Logs защита)."
+            toggle_btn = ""
+            trackers_html = '<div class="empty-trackers">🐧 <b>Внутренняя страница Tux</b><br>На этой странице нет внешних сетевых запросов.</div>'
+        elif is_whitelisted:
+            status_msg = '<span style="color:#dc2626;font-weight:bold;">⚠️ Защита Privacy Badger отключена для этого сайта.</span>'
+            toggle_btn = f'<button class="pb-btn btn-enable" onclick="toggleSite(\'{html_lib.escape(domain)}\')">⚡ Включить Privacy Badger на этом сайте</button>'
+            trackers_html = '<div class="empty-trackers" style="color:#dc2626;">Блокировка трекеров временно выключена пользователем.</div>'
+        else:
+            trackers = self.interceptor.get_detected_trackers(domain) if self.interceptor else []
+            count = len(trackers) or (self.interceptor.get_blocked_count(domain) if self.interceptor else 0)
+            if count > 0:
+                status_msg = f'Privacy Badger обнаружил <b>{count}</b> потенциальных трекеров на этой странице.'
+            else:
+                status_msg = 'Privacy Badger не обнаружил скрытых трекеров на этой странице.'
+            toggle_btn = f'<button class="pb-btn btn-disable" onclick="toggleSite(\'{html_lib.escape(domain)}\')">🛑 Отключить Privacy Badger на этом сайте</button>'
+
+            if trackers:
+                rows = []
+                for tr in trackers:
+                    tr_esc = html_lib.escape(tr)
+                    row = f'''
+                    <div class="tracker-row">
+                      <span class="tracker-name" title="{tr_esc}">{tr_esc}</span>
+                      <div class="tri-switch">
+                        <span class="tri-btn active red" onclick="setTrackerState('{tr_esc}', 'red', this)">✕</span>
+                        <span class="tri-btn yellow" onclick="setTrackerState('{tr_esc}', 'yellow', this)">🍪</span>
+                        <span class="tri-btn green" onclick="setTrackerState('{tr_esc}', 'green', this)">✓</span>
+                      </div>
+                    </div>
+                    '''
+                    rows.append(row)
+                trackers_html = "\n".join(rows)
+            else:
+                trackers_html = '<div class="empty-trackers">🎉 <b>Privacy Badger не обнаружил трекеров</b><br>На этой странице нет сторонних скриптов отслеживания.</div>'
+
+        return self._render_page("badger_popup", {
+            "DOMAIN": html_lib.escape(domain or "Внутренняя вкладка"),
+            "STATUS_MESSAGE": status_msg,
+            "TOGGLE_SITE_BUTTON": toggle_btn,
+            "TRACKERS_LIST_HTML": trackers_html
+        })
+
     def _render_settings(self) -> bytes:
         import json
         import html as html_lib
@@ -576,6 +624,13 @@ class TuxSchemeHandler(QWebEngineUrlSchemeHandler):
                     resp = json.dumps({"status": "ok"})
                     self._reply_bytes(job, resp.encode("utf-8"), "application/json")
                     return
+                elif action_type == "toggle_badger_whitelist":
+                    target_domain = query.get("domain", [""])[0]
+                    if target_domain:
+                        self.storage.toggle_domain_whitelist(target_domain)
+                    resp = json.dumps({"status": "ok", "domain": target_domain})
+                    self._reply_bytes(job, resp.encode("utf-8"), "application/json")
+                    return
 
             # Assets routing: tux://assets/icons/...
             if route == "assets" or parsed.netloc == "assets":
@@ -625,6 +680,11 @@ class TuxSchemeHandler(QWebEngineUrlSchemeHandler):
                 self._reply_bytes(job, content, "text/html")
             elif route == "bookmarks":
                 content = self._render_bookmarks()
+                self._reply_bytes(job, content, "text/html")
+            elif route in ("badger-popup", "privacybadger-popup"):
+                query_dict = parse_qs(parsed.query)
+                target_domain = query_dict.get("domain", [""])[0]
+                content = self._render_badger_popup(target_domain)
                 self._reply_bytes(job, content, "text/html")
             elif route in ("shield", "privacybadger", "badger"):
                 content = self._render_shield()
