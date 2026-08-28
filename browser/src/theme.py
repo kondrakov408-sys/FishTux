@@ -192,21 +192,24 @@ QPushButton#gradeBadge:hover {
     background-color: rgba(0, 221, 255, 0.25);
 }
 
-/* Shield Count Badge */
+/* Privacy Badger & Shield Count Badge */
+QPushButton#badgerBadge,
 QPushButton#shieldBadge {
-    background-color: #38383d;
-    border: 1px solid #52525e;
+    background-color: #2b2a33;
+    border: 1px solid #42414d;
     border-radius: 6px;
-    padding: 2px 8px;
-    color: #bfbfc9;
-    font-weight: 600;
+    padding: 2px 8px 2px 6px;
+    color: #fbfbfe;
+    font-weight: 700;
     font-size: 11px;
+    text-align: center;
 }
 
+QPushButton#badgerBadge:hover,
 QPushButton#shieldBadge:hover {
-    background-color: #42414d;
-    border-color: #00ddff;
-    color: #00ddff;
+    background-color: #38383d;
+    border-color: #f59e0b;
+    color: #fcd34d;
 }
 
 /* Tux Burner (Fire Button) */

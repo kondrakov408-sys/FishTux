@@ -110,17 +110,17 @@
 <body>
   <div class="container">
     <div class="header">
-      <span style="font-size:2.2rem;">🛡️</span>
+      <img src="tux://assets/icons/badger-48.png" style="width: 48px; height: 48px;" alt="Privacy Badger">
       <div>
-        <h1>Tux Shield — Центр Безопасности</h1>
-        <p style="color:var(--text-muted);font-size:0.85rem;">Статистика блокировки угроз, трекеров и защиты данных</p>
+        <h1>Privacy Badger & Tux Shield — Центр Безопасности</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;">Статистика блокировки скрытых трекеров, эвристического анализа и защиты EFF</p>
       </div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-val">{{TOTAL_TRACKERS}}</div>
-        <div class="stat-label">Заблокировано трекеров и рекламы</div>
+        <div class="stat-label">Заблокировано трекеров (Privacy Badger)</div>
       </div>
       <div class="stat-card">
         <div class="stat-val gold">{{HTTPS_UPGRADES}}</div>
@@ -128,7 +128,7 @@
       </div>
       <div class="stat-card">
         <div class="stat-val cyan">100%</div>
-        <div class="stat-label">Изоляция памяти (Rust/Qt6)</div>
+        <div class="stat-label">Изоляция песочницы (Zero-Logs)</div>
       </div>
     </div>
 

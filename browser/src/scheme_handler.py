@@ -626,7 +626,7 @@ class TuxSchemeHandler(QWebEngineUrlSchemeHandler):
             elif route == "bookmarks":
                 content = self._render_bookmarks()
                 self._reply_bytes(job, content, "text/html")
-            elif route == "shield":
+            elif route in ("shield", "privacybadger", "badger"):
                 content = self._render_shield()
                 self._reply_bytes(job, content, "text/html")
             elif route == "about":

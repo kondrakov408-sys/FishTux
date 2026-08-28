@@ -156,6 +156,7 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
         
         # Mapping of (first_party_domain) -> count of blocked requests in current session
         self.page_blocked_counts: Dict[str, int] = {}
+        self.page_trackers: Dict[str, Set[str]] = {}
         self.on_blocked_callback: Optional[Callable[[str, str, int], None]] = None
         self.on_privacy_alert_callback: Optional[Callable[[str, str], None]] = None
 
@@ -262,6 +263,10 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
             if first_party_domain:
                 self.page_blocked_counts[first_party_domain] = self.page_blocked_counts.get(first_party_domain, 0) + 1
                 curr_count = self.page_blocked_counts[first_party_domain]
+                if first_party_domain not in self.page_trackers:
+                    self.page_trackers[first_party_domain] = set()
+                if req_domain and req_domain != first_party_domain:
+                    self.page_trackers[first_party_domain].add(req_domain)
             else:
                 curr_count = 1
 
@@ -273,6 +278,9 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
 
     def get_blocked_count(self, domain: str) -> int:
         return self.page_blocked_counts.get(domain.lower(), 0)
+
+    def get_detected_trackers(self, domain: str) -> List[str]:
+        return sorted(list(self.page_trackers.get(domain.lower(), set())))
 
     def reset_page_count(self, domain: str) -> None:
         if domain.lower() in self.page_blocked_counts:

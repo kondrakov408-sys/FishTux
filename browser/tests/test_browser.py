@@ -202,6 +202,19 @@ class TestTuxPrivacyFeatures(unittest.TestCase):
         import shutil
         shutil.rmtree(temp_dir, ignore_errors=True)
 
+    def test_privacy_badger_assets_and_popover(self):
+        badger_32 = os.path.join(BASE_DIR, "assets", "icons", "badger-32.png")
+        badger_48 = os.path.join(BASE_DIR, "assets", "icons", "badger-48.png")
+        self.assertTrue(os.path.exists(badger_32))
+        self.assertTrue(os.path.exists(badger_48))
+
+        from browser.src.window import PrivacyBadgerPopover, TuxShieldPopover
+        self.assertEqual(PrivacyBadgerPopover, TuxShieldPopover)
+
+        from browser.src.interceptor import TuxRequestInterceptor
+        interceptor = TuxRequestInterceptor(TuxStorage())
+        self.assertEqual(interceptor.get_detected_trackers("example.com"), [])
+
 
 class TestTuxGhostManager(unittest.TestCase):
     def setUp(self):
