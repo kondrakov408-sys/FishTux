@@ -35,8 +35,9 @@ class TuxWebEnginePage(QWebEnginePage):
             parent_view.privacy_alert.emit(f"Доступ к оборудованию ({feat_name})", origin_str)
 
     def javaScriptConsoleMessage(self, level, message, lineNumber, sourceID):
-        if message.startswith("[TuxPrivacyAlert]"):
-            reason = message.replace("[TuxPrivacyAlert]", "").strip()
+        if "[TuxPrivacyAlert]" in message:
+            parts = message.split("[TuxPrivacyAlert]", 1)
+            reason = parts[1].strip() if len(parts) > 1 else message
             parent_view = self.parent()
             if parent_view and hasattr(parent_view, "privacy_alert"):
                 parsed_source = sourceID

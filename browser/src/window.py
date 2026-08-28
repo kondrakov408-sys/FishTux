@@ -196,6 +196,9 @@ class TuxBrowserWindow(QMainWindow):
         self._init_ui()
         self._init_shortcuts()
 
+        # Connect interceptor alert callback
+        self.interceptor.on_privacy_alert_callback = self._on_privacy_alert
+
         # Connect Ghost Manager events
         if self.ghost_manager:
             self.ghost_manager.status_changed.connect(self._update_ghost_ui)
@@ -909,21 +912,38 @@ class TuxBrowserWindow(QMainWindow):
 
     def _play_privacy_alert_sound(self):
         """Plays the futuristic privacy alert chime."""
-        try:
-            if hasattr(self, "alert_sound") and self.alert_sound:
-                self.alert_sound.play()
-            else:
+        sound_path = os.path.join(self.assets_dir, "sounds", "privacy_alert.wav")
+        played = False
+
+        # 1. Native Linux sound system (paplay / pw-play / aplay / canberra-gtk-play)
+        for player in ["paplay", "pw-play", "aplay", "canberra-gtk-play"]:
+            if shutil.which(player):
+                try:
+                    if player == "canberra-gtk-play":
+                        subprocess.Popen([player, "-f", sound_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    else:
+                        subprocess.Popen([player, sound_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    played = True
+                    break
+                except Exception:
+                    pass
+
+        # 2. QtMultimedia QSoundEffect fallback
+        if not played:
+            try:
                 from PySide6.QtMultimedia import QSoundEffect
-                sound_path = os.path.join(self.assets_dir, "sounds", "privacy_alert.wav")
-                if os.path.exists(sound_path):
+                if not self.alert_sound and os.path.exists(sound_path):
                     self.alert_sound = QSoundEffect(self)
                     self.alert_sound.setSource(QUrl.fromLocalFile(sound_path))
-                    self.alert_sound.setVolume(0.7)
+                    self.alert_sound.setVolume(0.8)
+                if self.alert_sound:
                     self.alert_sound.play()
-                else:
-                    from PySide6.QtWidgets import QApplication
-                    QApplication.beep()
-        except Exception:
+                    played = True
+            except Exception:
+                pass
+
+        # 3. System bell fallback
+        if not played:
             try:
                 from PySide6.QtWidgets import QApplication
                 QApplication.beep()

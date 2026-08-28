@@ -157,6 +157,7 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
         # Mapping of (first_party_domain) -> count of blocked requests in current session
         self.page_blocked_counts: Dict[str, int] = {}
         self.on_blocked_callback: Optional[Callable[[str, str, int], None]] = None
+        self.on_privacy_alert_callback: Optional[Callable[[str, str], None]] = None
 
     def _load_custom_rules(self):
         settings = self.storage.get_settings()
@@ -217,6 +218,8 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
                 if not (url.startswith("tux://") or url.startswith("http://127.0.0.1") or url.startswith("http://localhost")):
                     # Block unencrypted leak
                     info.block(True)
+                    if self.on_privacy_alert_callback:
+                        self.on_privacy_alert_callback("Kill-Switch: Заблокирована прямая утечка IP", first_party_domain)
                     return
 
         # 2. Privacy Headers (DNT & GPC)
@@ -244,6 +247,8 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
             req_host = info.requestUrl().host().lower()
             if req_host.startswith("[") or (":" in req_host and not req_host.startswith("127.") and req_host != "localhost") or "ipv6." in req_host or req_host.startswith("ipv6."):
                 info.block(True)
+                if self.on_privacy_alert_callback:
+                    self.on_privacy_alert_callback("Заблокирован зонд утечки IPv6", req_host)
                 return
 
         # 6. Ad & Tracker Blocking
@@ -262,6 +267,8 @@ class TuxRequestInterceptor(QWebEngineUrlRequestInterceptor):
 
             if self.on_blocked_callback:
                 self.on_blocked_callback(first_party_domain, url, curr_count)
+            if self.on_privacy_alert_callback:
+                self.on_privacy_alert_callback(f"Заблокирован трекер ({req_domain or 'analytics'})", first_party_domain)
             return
 
     def get_blocked_count(self, domain: str) -> int:

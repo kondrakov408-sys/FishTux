@@ -151,10 +151,15 @@ def get_anti_fingerprint_js(
         delete window.RTCIceCandidate;
     }} catch(e) {{}}
 
-    // 5. Canvas Farbling (Subtle deterministic noise)
+    // 5. Canvas Farbling (Subtle deterministic noise & alert)
     try {{
+        let canvasAlerted = false;
         const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
         HTMLCanvasElement.prototype.toDataURL = makeNative(function(type, ...args) {{
+            if (!canvasAlerted) {{
+                canvasAlerted = true;
+                try {{ console.warn("[TuxPrivacyAlert] Считывание цифрового Canvas отпечатка"); }} catch(e) {{}}
+            }}
             if (this.width > 0 && this.height > 0 && (!type || type === 'image/png')) {{
                 try {{
                     const ctx = this.getContext('2d');
@@ -172,6 +177,10 @@ def get_anti_fingerprint_js(
 
         const origGetImageData = CanvasRenderingContext2D.prototype.getImageData;
         CanvasRenderingContext2D.prototype.getImageData = makeNative(function(x, y, w, h) {{
+            if (!canvasAlerted) {{
+                canvasAlerted = true;
+                try {{ console.warn("[TuxPrivacyAlert] Считывание пикселей Canvas отпечатка"); }} catch(e) {{}}
+            }}
             const imgData = origGetImageData.apply(this, arguments);
             try {{
                 if (imgData && imgData.data && imgData.data.length > 0) {{
@@ -184,18 +193,25 @@ def get_anti_fingerprint_js(
         }}, origGetImageData, 'getImageData');
     }} catch(e) {{}}
 
-    // 6. WebGL Fingerprint Spoofing
+    // 6. WebGL Fingerprint Spoofing & Alert
     try {{
         const UNMASKED_VENDOR_WEBGL = 0x9245;
         const UNMASKED_RENDERER_WEBGL = 0x9246;
         const MAX_TEXTURE_SIZE = 0x0D33;
+        let webglAlerted = false;
 
         const spoofWebGL = function(proto) {{
             if (!proto || !proto.getParameter) return;
             const origGetParameter = proto.getParameter;
             proto.getParameter = makeNative(function(param) {{
-                if (param === UNMASKED_VENDOR_WEBGL) return 'Intel Inc.';
-                if (param === UNMASKED_RENDERER_WEBGL) return 'Intel Iris OpenGL Engine';
+                if (param === UNMASKED_VENDOR_WEBGL || param === UNMASKED_RENDERER_WEBGL) {{
+                    if (!webglAlerted) {{
+                        webglAlerted = true;
+                        try {{ console.warn("[TuxPrivacyAlert] Считывание параметров видеокарты (WebGL)"); }} catch(e) {{}}
+                    }}
+                    if (param === UNMASKED_VENDOR_WEBGL) return 'Intel Inc.';
+                    if (param === UNMASKED_RENDERER_WEBGL) return 'Intel Iris OpenGL Engine';
+                }}
                 if (param === MAX_TEXTURE_SIZE) return 8192;
                 return origGetParameter.apply(this, arguments);
             }}, origGetParameter, 'getParameter');
@@ -205,11 +221,16 @@ def get_anti_fingerprint_js(
         if (window.WebGL2RenderingContext) spoofWebGL(WebGL2RenderingContext.prototype);
     }} catch(e) {{}}
 
-    // 7. AudioContext Farbling
+    // 7. AudioContext Farbling & Alert
     try {{
+        let audioAlerted = false;
         if (window.AudioBuffer && AudioBuffer.prototype.getChannelData) {{
             const origGetChannelData = AudioBuffer.prototype.getChannelData;
             AudioBuffer.prototype.getChannelData = makeNative(function(channel) {{
+                if (!audioAlerted) {{
+                    audioAlerted = true;
+                    try {{ console.warn("[TuxPrivacyAlert] Считывание аудио-отпечатка (Audio Fingerprint)"); }} catch(e) {{}}
+                }}
                 const data = origGetChannelData.apply(this, arguments);
                 for (let i = 0; i < Math.min(data.length, 100); i += 10) {{
                     data[i] += 0.0000001;
