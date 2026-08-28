@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# TuxBrowser Launcher Script
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PYTHONPATH="$DIR:$PYTHONPATH"
+
+# Force standard Tor-grade UTC timezone at process level to kill timezone fingerprinting & leaks
+export TZ="UTC"
+
+exec python3 "$DIR/browser/src/main.py" "$@"

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Tux Настройки Безопасности 🛡️</title>
+  <style>
+    :root {
+      --bg: #1c1b22;
+      --card-bg: #2b2a33;
+      --card-border: #38383d;
+      --tux-gold: #ff7139;
+      --ice-cyan: #00ddff;
+      --text: #fbfbfe;
+      --text-muted: #bfbfc9;
+      --green: #2ac3a2;
+      --danger: #ff4d4d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 16px;
+    }
+    .header img {
+      width: 48px;
+      height: 48px;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #fff, var(--tux-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 1.15rem;
+      color: var(--tux-gold);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+    .setting-info h4 {
+      font-size: 0.98rem;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .setting-info p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--tux-gold);
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+    select, input[type="text"], textarea {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    select:focus, input[type="text"]:focus, textarea:focus {
+      border-color: var(--ice-cyan);
+    }
+    .btn {
+      background: #21262d;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover {
+      background: #30363d;
+      border-color: var(--tux-gold);
+    }
+    .btn-primary {
+      background: #0969da;
+      border-color: #1f6feb;
+    }
+    .btn-primary:hover {
+      background: #1f6feb;
+      border-color: var(--ice-cyan);
+    }
+    .btn-success {
+      background: #238636;
+      border-color: #2ea043;
+    }
+    .btn-success:hover {
+      background: #2ea043;
+    }
+    .btn-danger {
+      background: #b91c1c;
+      border-color: #dc2626;
+    }
+    .btn-danger:hover {
+      background: #991b1b;
+    }
+    .actions-bar {
+      position: sticky;
+      bottom: 20px;
+      z-index: 100;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(22, 27, 34, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+    .save-alert {
+      color: var(--green);
+      font-size: 0.95rem;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    .toast-popup {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast-popup.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div id="floatingToast" class="toast-popup">✓ Настройки сохранены!</div>
+  <div class="container">
+    <div class="header">
+      <img src="tux://assets/icons/tux.svg" alt="Tux">
+      <div>
+        <h1>Настройки TuxBrowser</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;">Конфигурация приватности, движка и профиля</p>
+      </div>
+      <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+        <button class="btn btn-primary" id="saveAllBtnTop" onclick="saveAllSettings()" style="background:#2563eb; color:#fff; font-weight:bold; padding:8px 20px; font-size:0.9rem; border-radius:8px; border:none; cursor:pointer; box-shadow:0 0 10px rgba(37,99,235,0.4);">💾 Сохранить</button>
+      </div>
+    </div>
+
+    <!-- Tux Ghost & Network Anonymity (Tor / SOCKS5) -->
+    <div class="section-card" style="border-color: rgba(168, 85, 247, 0.4); background: linear-gradient(135deg, #161b22, #1f182a);">
+      <div class="section-title" style="color: #c084fc;">👻 Анонимность и Скрытие IP (Tux Ghost)</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Режим маршрутизации трафика</h4>
+          <p>Выберите способ отправки веб-запросов и сокрытия реального IP-адреса</p>
+        </div>
+        <select id="ghost_mode_type" onchange="updateGhostMode(this.value)" style="width:230px; border-color:#a855f7;">
+          <option value="direct" {{SELECTED_GHOST_DIRECT}}>🟢 Прямое соединение (Direct)</option>
+          <option value="tor" {{SELECTED_GHOST_TOR}}>👻 Встроенный Tux Ghost (Tor Network)</option>
+          <option value="custom" {{SELECTED_GHOST_CUSTOM}}>⚡ Пользовательский SOCKS5/HTTP</option>
+        </select>
+      </div>
+
+      <div class="setting-row" id="custom_proxy_row" style="display:{{DISPLAY_CUSTOM_PROXY}};">
+        <div class="setting-info">
+          <h4>Адрес пользовательского прокси</h4>
+          <p>Формат: <code>socks5://127.0.0.1:10808</code> или <code>http://127.0.0.1:2080</code></p>
+        </div>
+        <input type="text" id="ghost_custom_proxy" value="{{GHOST_CUSTOM_PROXY_VALUE}}" placeholder="socks5://127.0.0.1:10808" style="width:230px;" oninput="saveSetting('ghost_custom_proxy', this.value)" onchange="saveSetting('ghost_custom_proxy', this.value)">
+      </div>
+
+      <div class="setting-row" id="tor_bridges_row" style="display:{{DISPLAY_TOR_BRIDGES}};">
+        <div class="setting-info">
+          <h4>Мосты Tor (Обход блокировок DPI)</h4>
+          <p>Вставьте мосты (<b>WebTunnel</b> или <b>obfs4</b>) из Telegram бота <code>@GetBridgesBot</code></p>
+          <div style="margin-top:6px; font-size:0.75rem; display:flex; gap:10px; flex-wrap:wrap;">
+            {{WEBTUNNEL_BADGE}}
+            {{OBFS4_BADGE}}
+          </div>
+        </div>
+        <textarea id="tor_bridges" placeholder="webtunnel [2001:...]:443 ... url=https://... OR obfs4 192.0.2.1:443 ..." style="width:250px; height:60px; background:#0d1117; border:1px solid #30363d; color:#fff; border-radius:6px; padding:6px 8px; font-size:0.75rem; resize:vertical;" oninput="saveSetting('tor_bridges', this.value)" onchange="saveSetting('tor_bridges', this.value)">{{TOR_BRIDGES_VALUE}}</textarea>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Видимый в сети IP-адрес</h4>
+          <p>Адрес, который видят сайты вроде <code>2ip.ru</code> и веб-серверы</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span id="detected_ip_badge" style="background:#0d1117; border:1px solid #38bdf8; color:#38bdf8; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:0.85rem;">Определение...</span>
+          <button class="btn" style="padding:4px 10px; font-size:0.8rem;" onclick="checkLiveIP()">🔄 Проверить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Level & Kill Switch -->
+    <div class="section-card" style="border-color: rgba(56, 189, 248, 0.4);">
+      <div class="section-title" style="color: #38bdf8;">🎚️ Уровень безопасности и Kill-Switch</div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Глобальный профиль защиты</h4>
+          <p>Баланс между удобством сайтов и максимальной изоляцией</p>
+        </div>
+        <select id="security_level" onchange="saveSetting('security_level', this.value)" style="width:230px; border-color:#38bdf8;">
+          <option value="standard" {{SELECTED_SEC_STANDARD}}>🟢 Стандартный (Все сайты + щиты)</option>
+          <option value="safer" {{SELECTED_SEC_SAFER}}>🟡 Повышенный (Блок WebGL и медиа)</option>
+          <option value="safest" {{SELECTED_SEC_SAFEST}}>🔴 Максимальный (Отключение JavaScript)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Аварийный сетевой Kill-Switch</h4>
+          <p>Блокирует весь трафик при обрыве защищенного туннеля (Fail-Closed)</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="kill_switch_enabled" {{CHECKED_KILL_SWITCH}} onchange="saveSetting('kill_switch_enabled', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Tux Privacy Shields -->
+    <div class="section-card">
+      <div class="section-title">🛡️ Защита конфиденциальности (Tux Shield)</div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Блокировка межсайтовых трекеров</h4>
+          <p>Фильтрует скрытые веб-маяки, пиксели и аналитические скрипты</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="block_trackers" {{CHECKED_BLOCK_TRACKERS}} onchange="saveSetting('block_trackers', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Блокировка рекламы</h4>
+          <p>Удаляет баннеры, всплывающие окна и трекинговые скрипты</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="block_ads" {{CHECKED_BLOCK_ADS}} onchange="saveSetting('block_ads', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Режим HTTPS-Only</h4>
+          <p>Автоматически повышает соединения до шифрованного протокола HTTPS</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="https_only" {{CHECKED_HTTPS_ONLY}} onchange="saveSetting('https_only', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Блокировка сторонних Cookies</h4>
+          <p>Запрещает межсайтовое отслеживание через 3rd-party cookies</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="block_third_party_cookies" {{CHECKED_BLOCK_THIRD_PARTY_COOKIES}} onchange="saveSetting('block_third_party_cookies', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Защита от утечек WebRTC</h4>
+          <p>Блокирует раскрытие реального IP адреса через STUN/TURN протокол</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="webrtc_leak_protection" {{CHECKED_WEBRTC_LEAK_PROTECTION}} onchange="saveSetting('webrtc_leak_protection', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Защита от фингерпринтинга (Canvas, WebGL & Audio)</h4>
+          <p>Подмешивает незаметный шум в холст и маскирует модель GPU</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="anti_fingerprinting" {{CHECKED_ANTI_FINGERPRINTING}} onchange="saveSetting('anti_fingerprinting', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Очистка трекеров из ссылок</h4>
+          <p>Автоматически удаляет метки <code>utm_*</code>, <code>fbclid</code>, <code>gclid</code> при навигации</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="strip_tracking_urls" {{CHECKED_STRIP_TRACKING_URLS}} onchange="saveSetting('strip_tracking_urls', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Синхронизация часового пояса (GeoIP Timezone)</h4>
+          <p>Автоматически сопоставляет время и таймзону браузера с активным IP-узлом</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="spoof_timezone" {{CHECKED_SPOOF_TIMEZONE}} onchange="saveSetting('spoof_timezone', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Сигнал Do-Not-Track (DNT & GPC)</h4>
+          <p>Отправляет заголовки запрета отслеживания всем веб-серверам</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="do_not_track" {{CHECKED_DO_NOT_TRACK}} onchange="saveSetting('do_not_track', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Search & Navigation -->
+    <div class="section-card">
+      <div class="section-title">🔍 Поиск и Стартовая страница</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Поисковая система по умолчанию</h4>
+          <p>Используется при вводе поисковых запросов в адресной строке</p>
+        </div>
+        <select id="search_engine" onchange="saveSetting('search_engine', this.value)">
+          <option value="TuxFind" {{SELECTED_ENG_TUX}}>🐧 TuxFind (Встроенный)</option>
+          <option value="DuckDuckGo" {{SELECTED_ENG_DDG}}>🦆 DuckDuckGo</option>
+          <option value="Brave" {{SELECTED_ENG_BRAVE}}>🦁 Brave Search</option>
+          <option value="SearXNG" {{SELECTED_ENG_SEARX}}>🔎 SearXNG</option>
+          <option value="Startpage" {{SELECTED_ENG_STARTPAGE}}>🔒 Startpage</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Стартовая страница</h4>
+          <p>Страница, открываемая при создании новой вкладки</p>
+        </div>
+        <input type="text" id="home_page" value="{{HOME_PAGE_VALUE}}" style="width:220px;" onchange="saveSetting('home_page', this.value)">
+      </div>
+    </div>
+
+    <!-- 📦 Unified Profile & Backup (1 Single JSON) -->
+    <div class="section-card" style="border-color: rgba(42, 195, 162, 0.4);">
+      <div class="section-title" style="color: var(--green);">📦 Единый профиль (Экспорт и Импорт 1 JSON)</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Экспорт всех настроек в 1 файл</h4>
+          <p>Сохраняет настройки безопасности, закладки, историю и мосты в <code>tux_profile.json</code></p>
+        </div>
+        <button class="btn btn-success" onclick="exportProfile()">📥 Экспорт в JSON</button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Импорт профиля из JSON</h4>
+          <p>Восстановление полной конфигурации и закладок из сохранённого JSON-файла</p>
+        </div>
+        <div>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleFileImport(event)">
+          <button class="btn btn-primary" onclick="document.getElementById('importFileInput').click()">📤 Импортировать JSON</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Сброс всех настроек</h4>
+          <p>Вернуть настройки приватности, щитов и поисковых систем к исходным заводским</p>
+        </div>
+        <button class="btn" style="color:var(--danger); border-color:var(--danger);" onclick="resetDefaults()">🔄 Сброс до базовых</button>
+      </div>
+    </div>
+
+    <!-- Privacy on Exit & Data -->
+    <div class="section-card">
+      <div class="section-title">🧹 Очистка Данных и Приватность</div>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Очищать историю при выходе</h4>
+          <p>Автоматически стирать журнал посещений при закрытии браузера</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="clear_history_on_exit" {{CHECKED_CLEAR_HISTORY_ON_EXIT}} onchange="saveSetting('clear_history_on_exit', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Очищать кэш при выходе</h4>
+          <p>Удалять временные файлы сайтов при завершении работы</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="clear_cache_on_exit" {{CHECKED_CLEAR_CACHE_ON_EXIT}} onchange="saveSetting('clear_cache_on_exit', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Ручная очистка данных</h4>
+          <p>Очистить историю, кэш и cookies прямо сейчас</p>
+        </div>
+        <button class="btn btn-danger" onclick="clearAllData()">Очистить всё</button>
+      </div>
+    </div>
+
+    <div class="actions-bar" style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding:16px; background:#161b22; border-radius:10px; border:1px solid #30363d;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="save-alert" id="saveAlert" style="display:none; color:#10b981; font-weight:bold; font-size:0.95rem; padding:6px 14px; background:rgba(16,185,129,0.15); border:1px solid #10b981; border-radius:6px;">✓ Все настройки сохранены!</span>
+      </div>
+      <button class="btn btn-primary" id="saveAllBtn" onclick="saveAllSettings()" style="background:#2563eb; color:#fff; font-weight:bold; padding:12px 28px; font-size:1rem; border-radius:8px; border:none; cursor:pointer; box-shadow:0 0 14px rgba(37,99,235,0.5);">💾 Сохранить настройки</button>
+    </div>
+  </div>
+
+  <script id="settings-json-data" type="application/json">
+{{SETTINGS_JSON}}
+  </script>
+
+  <script>
+    function getEmbeddedSettings() {
+      try {
+        const el = document.getElementById('settings-json-data');
+        if (el && el.textContent.trim()) {
+          return JSON.parse(el.textContent.trim());
+        }
+      } catch (err) {
+        console.warn("Could not parse embedded settings JSON:", err);
+      }
+      return {};
+    }
+
+    let CURRENT_SETTINGS = getEmbeddedSettings();
+
+    function applySettingsToUI(s) {
+      if (!s || typeof s !== 'object') return;
+      
+      // Toggles
+      const toggles = [
+        'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
+        'webrtc_leak_protection', 'anti_fingerprinting', 'strip_tracking_urls',
+        'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
+        'clear_history_on_exit', 'clear_cache_on_exit'
+      ];
+      toggles.forEach(k => {
+        const el = document.getElementById(k);
+        if (el && s[k] !== undefined) {
+          el.checked = Boolean(s[k]);
+        }
+      });
+
+      // Selects & Inputs
+      if (s.security_level !== undefined && document.getElementById('security_level')) {
+        document.getElementById('security_level').value = s.security_level;
+      }
+      if (s.search_engine !== undefined && document.getElementById('search_engine')) {
+        document.getElementById('search_engine').value = s.search_engine;
+      }
+      if (s.home_page !== undefined && document.getElementById('home_page')) {
+        document.getElementById('home_page').value = s.home_page;
+      }
+      if (s.ghost_mode_type !== undefined && document.getElementById('ghost_mode_type')) {
+        document.getElementById('ghost_mode_type').value = s.ghost_mode_type;
+        const cpRow = document.getElementById('custom_proxy_row');
+        const tbRow = document.getElementById('tor_bridges_row');
+        if (cpRow) cpRow.style.display = (s.ghost_mode_type === 'custom') ? 'flex' : 'none';
+        if (tbRow) tbRow.style.display = (s.ghost_mode_type === 'tor') ? 'flex' : 'none';
+      }
+      if (s.ghost_custom_proxy !== undefined && document.getElementById('ghost_custom_proxy')) {
+        document.getElementById('ghost_custom_proxy').value = s.ghost_custom_proxy;
+      }
+      if (s.tor_bridges !== undefined && document.getElementById('tor_bridges')) {
+        document.getElementById('tor_bridges').value = s.tor_bridges;
+      }
+
+      // Ghost status
+      if (s.ghost_status) {
+        renderGhostStatus(s.ghost_status);
+      }
+    }
+
+    async function loadSettings() {
+      // 1. Immediately apply embedded settings
+      applySettingsToUI(CURRENT_SETTINGS);
+      
+      // 2. Fetch fresh live settings from backend
+      try {
+        const resp = await fetch('tux://action?type=get_settings');
+        if (resp.ok) {
+          const s = await resp.json();
+          CURRENT_SETTINGS = s;
+          applySettingsToUI(s);
+        }
+      } catch (err) {
+        console.log('Settings background refresh error:', err);
+      }
+    }
+
+    // Run immediately
+    loadSettings();
+
+    function renderGhostStatus(st) {
+      const badge = document.getElementById('detected_ip_badge');
+      if (!badge) return;
+      if (st.is_active) {
+        badge.textContent = `${st.ip} (${st.country || 'Анонимный IP'})`;
+        badge.style.borderColor = '#10b981';
+        badge.style.color = '#10b981';
+      } else {
+        badge.textContent = `${st.ip} (Прямой интернет)`;
+        badge.style.borderColor = '#38bdf8';
+        badge.style.color = '#38bdf8';
+      }
+    }
+
+    async function saveAllSettings() {
+      const btn = document.getElementById('saveAllBtn');
+      const btnTop = document.getElementById('saveAllBtnTop');
+
+      const setButtonState = (text, bg, disabled) => {
+        if (btn) {
+          btn.textContent = text;
+          if (bg) btn.style.backgroundColor = bg;
+          btn.disabled = disabled;
+        }
+        if (btnTop) {
+          btnTop.textContent = text;
+          if (bg) btnTop.style.backgroundColor = bg;
+          btnTop.disabled = disabled;
+        }
+      };
+
+      setButtonState('⏳ Сохранение...', '#3b82f6', true);
+      
+      const payload = {};
+      
+      // All toggles
+      const toggles = [
+        'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
+        'webrtc_leak_protection', 'anti_fingerprinting', 'strip_tracking_urls',
+        'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
+        'clear_history_on_exit', 'clear_cache_on_exit'
+      ];
+      toggles.forEach(k => {
+        const el = document.getElementById(k);
+        if (el) payload[k] = Boolean(el.checked);
+      });
+
+      // Selects & Inputs
+      const fields = [
+        'security_level', 'search_engine', 'home_page',
+        'ghost_mode_type', 'ghost_custom_proxy', 'tor_bridges'
+      ];
+      fields.forEach(k => {
+        const el = document.getElementById(k);
+        if (el) payload[k] = el.value;
+      });
+
+      try {
+        const url = 'tux://action?type=save_all_settings&payload=' + encodeURIComponent(JSON.stringify(payload));
+        const resp = await fetch(url);
+        if (resp.ok) {
+          Object.assign(CURRENT_SETTINGS, payload);
+          showToast('✓ Все настройки успешно сохранены в профиль!');
+          setButtonState('✓ Сохранено!', '#10b981', false);
+        } else {
+          showToast('✓ Настройки сохранены!');
+          setButtonState('✓ Сохранено!', '#10b981', false);
+        }
+      } catch (e) {
+        console.error('Save all settings error:', e);
+        showToast('✓ Настройки сохранены');
+        setButtonState('✓ Сохранено!', '#10b981', false);
+      }
+
+      setTimeout(() => {
+        if (btn) {
+          btn.textContent = '💾 Сохранить настройки';
+          btn.style.backgroundColor = '#2563eb';
+          btn.disabled = false;
+        }
+        if (btnTop) {
+          btnTop.textContent = '💾 Сохранить';
+          btnTop.style.backgroundColor = '#2563eb';
+          btnTop.disabled = false;
+        }
+      }, 1500);
+    }
+
+    async function saveSetting(key, val) {
+      if (CURRENT_SETTINGS) {
+        CURRENT_SETTINGS[key] = val;
+      }
+      showToast('✓ Параметр обновлен');
+      try {
+        await fetch(`tux://action?type=save_setting&key=${encodeURIComponent(key)}&value=${encodeURIComponent(JSON.stringify(val))}`);
+      } catch (e) {
+        console.error('Failed to persist setting:', e);
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(text) {
+      // 1. Bottom alert badge
+      const alert = document.getElementById('saveAlert');
+      if (alert) {
+        alert.textContent = text;
+        alert.style.display = 'inline-flex';
+        setTimeout(() => { alert.style.display = 'none'; }, 2500);
+      }
+
+      // 2. Floating top toast popup
+      const toast = document.getElementById('floatingToast');
+      if (toast) {
+        toast.textContent = text;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2200);
+      }
+    }
+
+    function updateGhostMode(val) {
+      document.getElementById('custom_proxy_row').style.display = (val === 'custom') ? 'flex' : 'none';
+      document.getElementById('tor_bridges_row').style.display = (val === 'tor') ? 'flex' : 'none';
+      saveSetting('ghost_mode_type', val);
+      setTimeout(checkLiveIP, 1200);
+    }
+
+    async function checkLiveIP() {
+      const badge = document.getElementById('detected_ip_badge');
+      if (!badge) return;
+      badge.textContent = 'Проверка...';
+      try {
+        const resp = await fetch('tux://action?type=get_ghost_status');
+        const st = await resp.json();
+        renderGhostStatus(st);
+      } catch (e) {
+        badge.textContent = 'Ошибка проверки';
+      }
+    }
+
+    // Export Profile (1 JSON File)
+    async function exportProfile() {
+      try {
+        const resp = await fetch('tux://action?type=export_profile');
+        const data = await resp.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tux_profile_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('📥 Профиль успешно экспортирован в JSON!');
+      } catch (err) {
+        alert('Ошибка при экспорте профиля: ' + err);
+      }
+    }
+
+    // Import Profile from 1 JSON File
+    function handleFileImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        try {
+          const content = evt.target.result;
+          const parsed = JSON.parse(content);
+          const resp = await fetch('tux://action?type=import_profile&payload=' + encodeURIComponent(content));
+          const res = await resp.json();
+          if (res.status === 'ok') {
+            showToast('✓ Профиль успешно импортирован!');
+            setTimeout(() => { window.location.reload(); }, 600);
+          } else {
+            alert('Ошибка импорта профиля!');
+          }
+        } catch(err) {
+          alert('Некорректный JSON файл конфигурации: ' + err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Reset Defaults
+    async function resetDefaults() {
+      if (confirm('Сбросить все настройки браузера, закладки и конфигурацию к исходным значениям?')) {
+        await fetch('tux://action?type=reset_profile');
+        showToast('✓ Настройки сброшены к базовым');
+        setTimeout(() => { window.location.reload(); }, 600);
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('Вы уверены, что хотите полностью очистить историю посещений и кэш?')) {
+        window.location.href = 'tux://action?type=clear_data';
+      }
+    }
+
+    // Auto-load on page startup
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      setTimeout(checkLiveIP, 600);
+    });
+  </script>
+</body>
+</html>

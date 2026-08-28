@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Tux История Посещений 📜</title>
+  <style>
+    :root {
+      --bg: #1c1b22;
+      --card-bg: #2b2a33;
+      --card-border: #38383d;
+      --tux-gold: #ff7139;
+      --ice-cyan: #00ddff;
+      --text: #fbfbfe;
+      --text-muted: #bfbfc9;
+      --danger: #ff3b30;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 16px;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .title-group h1 {
+      font-size: 1.7rem;
+      color: var(--tux-gold);
+    }
+    .search-filter {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .search-filter input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    .search-filter input:focus {
+      border-color: var(--ice-cyan);
+    }
+    .btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      border-color: var(--tux-gold);
+    }
+    .btn-danger {
+      background: #7f1d1d;
+      border-color: #991b1b;
+      color: #fca5a5;
+    }
+    .btn-danger:hover {
+      background: #991b1b;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.2s;
+    }
+    .history-item:hover {
+      border-color: var(--ice-cyan);
+    }
+    .item-main {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--text);
+      overflow: hidden;
+    }
+    .item-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-url {
+      font-size: 0.8rem;
+      color: var(--ice-cyan);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+    }
+    .del-btn:hover {
+      color: var(--danger);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div class="title-group">
+        <span style="font-size:1.8rem;">📜</span>
+        <h1>История посещений</h1>
+      </div>
+      <button class="btn btn-danger" onclick="clearHistory()">Очистить историю</button>
+    </div>
+
+    <div class="search-filter">
+      <input type="text" placeholder="Фильтр по названию или URL..." id="filterInput" oninput="filterHistory()">
+    </div>
+
+    <div class="history-list" id="historyContainer">
+      <!-- Generated items -->
+      {{HISTORY_ITEMS}}
+    </div>
+  </div>
+
+  <script>
+    function filterHistory() {
+      const q = document.getElementById('filterInput').value.toLowerCase();
+      const items = document.querySelectorAll('.history-item');
+      items.forEach(el => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    async function deleteItem(url) {
+      try {
+        await fetch('tux://action?type=delete_history&url=' + encodeURIComponent(url));
+        window.location.reload();
+      } catch (e) {
+        window.location.href = 'tux://action?type=delete_history&url=' + encodeURIComponent(url);
+      }
+    }
+
+    async function clearHistory() {
+      if (confirm('Вы точно хотите очистить всю историю?')) {
+        try {
+          await fetch('tux://action?type=clear_history');
+          window.location.reload();
+        } catch (e) {
+          window.location.href = 'tux://action?type=clear_history';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

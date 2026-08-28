@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Tux Privacy Shield Dashboard 🛡️</title>
+  <style>
+    :root {
+      --bg: #1c1b22;
+      --card-bg: #2b2a33;
+      --card-border: #38383d;
+      --tux-gold: #ff7139;
+      --ice-cyan: #00ddff;
+      --text: #fbfbfe;
+      --text-muted: #bfbfc9;
+      --green: #2ac3a2;
+      --purple: #9059ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #fff, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    .stat-val.gold { color: var(--tux-gold); }
+    .stat-val.cyan { color: var(--ice-cyan); }
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      color: var(--tux-gold);
+      margin-bottom: 12px;
+    }
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .whitelist-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .tag {
+      background: #21262d;
+      border: 1px solid #30363d;
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span style="font-size:2.2rem;">🛡️</span>
+      <div>
+        <h1>Tux Shield — Центр Безопасности</h1>
+        <p style="color:var(--text-muted);font-size:0.85rem;">Статистика блокировки угроз, трекеров и защиты данных</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val">{{TOTAL_TRACKERS}}</div>
+        <div class="stat-label">Заблокировано трекеров и рекламы</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val gold">{{HTTPS_UPGRADES}}</div>
+        <div class="stat-label">Защищенных HTTPS сессий</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val cyan">100%</div>
+        <div class="stat-label">Изоляция памяти (Rust/Qt6)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔐 Активные уровни защиты</div>
+      <ul class="feature-list">
+        <li><span style="color:var(--green)">✓</span> <strong>Сетевой фильтр (Request Interceptor):</strong> Блокировка аналитических скриптов и вредоносных доменов до отправки сетевого запроса.</li>
+        <li><span style="color:var(--green)">✓</span> <strong>Do-Not-Track & GPC:</strong> Принудительная отправка заголовков приватности веб-серверам.</li>
+        <li><span style="color:var(--green)">✓</span> <strong>Изоляция куки:</strong> Блокировка сторонних cross-origin трекеров.</li>
+        <li><span style="color:var(--green)">✓</span> <strong>Песочница Chromium:</strong> Процессы веб-страниц изолированы от системного доступа к файлам и устройствам.</li>
+        <li><span style="color:var(--green)">✓</span> <strong>Защита WebRTC:</strong> Предотвращение утечки локального IP через STUN/ICE пакеты.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚪ Белый список доменов (Shield Bypass)</div>
+      <p style="color:var(--text-muted);font-size:0.85rem;">Домены, на которых отключена фильтрация трекеров:</p>
+      <div class="whitelist-tags">
+        {{WHITELIST_TAGS}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

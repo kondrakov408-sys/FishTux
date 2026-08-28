@@ -1,0 +1,21 @@
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+venv/
+env/
+.venv/
+
+# Go compiled binaries
+TuxFind/tuxfind
+
+# Browser runtime data & logs
+tor_ghost/
+web_profile/
+*.log
+.DS_Store
+.vscode/
+.idea/

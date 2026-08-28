@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Новая вкладка</title>
+  <style>
+    :root {
+      --bg-dark: #1c1b22;
+      --bg-gradient: radial-gradient(circle at 50% 30%, #2b223d 0%, #1c1b22 70%, #151419 100%);
+      --surface-card: #2b2a33;
+      --surface-card-hover: #42414d;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #00ddff;
+      --accent-orange: #ff7139;
+      --accent-purple: #9059ff;
+      --text-main: #fbfbfe;
+      --text-muted: #bfbfc9;
+      --text-sub: #8f8f9d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 60px 20px 24px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    /* Firefox / FishTux Centered Logo Header */
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 36px;
+      text-decoration: none;
+    }
+
+    .brand-logo-wrap {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff9400 0%, #ff3b30 50%, #9059ff 100%);
+      padding: 3px;
+      box-shadow: 0 0 35px rgba(255, 113, 57, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .brand-logo-wrap:hover {
+      transform: scale(1.08) rotate(4deg);
+    }
+
+    .brand-logo-inner {
+      width: 100%;
+      height: 100%;
+      background: #1c1b22;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .brand-title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      font-family: "Segoe UI", -apple-system, sans-serif;
+    }
+
+    /* Firefox Proton Search Pill */
+    .search-wrapper {
+      width: 100%;
+      max-width: 660px;
+      position: relative;
+      margin-bottom: 48px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #2b2a33;
+      border: 1.5px solid transparent;
+      border-radius: 28px;
+      padding: 6px 14px 6px 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .search-box:hover {
+      background: #38383d;
+    }
+
+    .search-box:focus-within {
+      background: #2b2a33;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(0, 221, 255, 0.2), 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .engine-badge-select {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      margin-right: 8px;
+      border-radius: 14px;
+      background: #2b2a33;
+      font-size: 0.88rem;
+      color: #00ddff;
+      cursor: pointer;
+      border: 1px solid #42414d;
+      outline: none;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2300ddff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 26px;
+    }
+
+    .engine-badge-select:hover, .engine-badge-select:focus {
+      background-color: #42414d;
+      border-color: #00ddff;
+      box-shadow: 0 0 10px rgba(0, 221, 255, 0.25);
+    }
+
+    .engine-badge-select option {
+      background: #2b2a33;
+      color: #ffffff;
+      padding: 8px;
+    }
+
+    .engine-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      margin-right: 8px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.85rem;
+      color: var(--text-main);
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .engine-badge:hover {
+      background: rgba(0, 221, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .engine-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 12px;
+      width: 280px;
+      background: #2b2a33;
+      border: 1px solid #42414d;
+      border-radius: 14px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      padding: 6px;
+      text-align: left;
+    }
+
+    .engine-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      transition: background 0.15s ease;
+    }
+
+    .engine-option:hover {
+      background: #42414d;
+      color: var(--accent-cyan);
+    }
+
+    .engine-option.active {
+      background: rgba(0, 221, 255, 0.12);
+      border: 1px solid rgba(0, 221, 255, 0.3);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 1.05rem;
+      padding: 10px 4px;
+    }
+
+    .search-input::placeholder {
+      color: #9f9fad;
+      font-size: 0.98rem;
+    }
+
+    /* Autocomplete Dropdown */
+    .autocomplete-box {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #2b2a33;
+      border: 1px solid #42414d;
+      border-radius: 16px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      z-index: 100;
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .autocomplete-item {
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-main);
+      transition: background 0.15s ease;
+    }
+
+    .autocomplete-item:hover {
+      background: #42414d;
+      color: var(--accent-cyan);
+    }
+
+    /* Firefox Proton Top Sites / Shortcuts Grid */
+    .shortcuts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px 18px;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-main);
+      width: 76px;
+      gap: 8px;
+      transition: transform 0.15s ease;
+    }
+
+    .shortcut-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .tile-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: #2b2a33;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .shortcut-item:hover .tile-box {
+      background: #42414d;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 15px rgba(0, 221, 255, 0.15);
+    }
+
+    .tile-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 24px;
+    }
+
+    .shortcut-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 76px;
+      text-align: center;
+      transition: color 0.15s ease;
+    }
+
+    .shortcut-item:hover .shortcut-label {
+      color: #ffffff;
+    }
+
+    /* Vector Icon Colors for Top Sites */
+    .icon-chatgpt {
+      background: #10a37f;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .icon-proton {
+      background: #6d4aff;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .icon-scanner {
+      background: #0f241a;
+      border: 1px solid #10b981;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .icon-duckai {
+      background: #de5833;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .icon-github {
+      background: #24292e;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+    }
+
+    .icon-deepseek {
+      background: #1e3a8a;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .icon-youtube {
+      background: #ff0000;
+      border-radius: 10px;
+      width: 34px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .icon-gemini {
+      background: linear-gradient(135deg, #1ba0e2, #9b72cb, #d96570);
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    /* Bottom Customize Settings Button (Firefox Proton style) */
+    .customize-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #2b2a33;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .customize-btn:hover {
+      background: #42414d;
+      color: #ffffff;
+      transform: scale(1.08);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <!-- Brand Logo -->
+    <a href="tux://home" class="brand-header">
+      <div class="brand-logo-wrap">
+        <div class="brand-logo-inner">🦊</div>
+      </div>
+      <h1 class="brand-title">FishTux</h1>
+    </a>
+
+    <!-- Firefox AwesomeBar Style Search Pill -->
+    <div class="search-wrapper">
+      <form class="search-box" action="tux://search" method="GET" id="searchForm" onsubmit="handleHomeSearch(event)">
+        <select id="engineSelect" class="engine-badge-select" onchange="onEngineSelectChange(this.value)" title="Выбор поисковой системы">
+          <option value="TuxFind">🐧 TuxFind (Zero-Logs)</option>
+          <option value="DuckDuckGo">🦆 DuckDuckGo</option>
+          <option value="Brave">🦁 Brave Search</option>
+          <option value="Startpage">🔒 Startpage</option>
+        </select>
+        <input 
+          type="text" 
+          name="q" 
+          class="search-input" 
+          placeholder="Поиск в TuxFind или введите адрес..." 
+          autofocus 
+          autocomplete="off" 
+          id="queryInput"
+          oninput="onQueryInput(this.value)"
+        >
+      </form>
+
+      <div id="autocompleteBox" class="autocomplete-box"></div>
+    </div>
+
+    <!-- Top Sites Grid (8 items from screenshot) -->
+    <div class="shortcuts-grid">
+      <!-- 1. ChatGPT -->
+      <a href="https://chatgpt.com" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-chatgpt">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.6669zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813v6.7227zm1.107-1.7482l2.6-1.5002 2.6 1.5002v3.0003l-2.6 1.5002-2.6-1.5002z"/></svg>
+          </div>
+        </div>
+        <span class="shortcut-label">ChatGPT</span>
+      </a>
+
+      <!-- 2. Proton Mail -->
+      <a href="https://mail.proton.me" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-proton">P</div>
+        </div>
+        <span class="shortcut-label">Proton Mail</span>
+      </a>
+
+      <!-- 3. System Scanner -->
+      <a href="tux://shield" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-scanner">🌐</div>
+        </div>
+        <span class="shortcut-label">System Scanner</span>
+      </a>
+
+      <!-- 4. Duck AI -->
+      <a href="https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-duckai">🦆</div>
+        </div>
+        <span class="shortcut-label">Duck AI</span>
+      </a>
+
+      <!-- 5. GitHub -->
+      <a href="https://github.com" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-github">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          </div>
+        </div>
+        <span class="shortcut-label">GitHub</span>
+      </a>
+
+      <!-- 6. DeepSeek -->
+      <a href="https://chat.deepseek.com" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-deepseek">🐋</div>
+        </div>
+        <span class="shortcut-label">DeepSeek</span>
+      </a>
+
+      <!-- 7. YouTube -->
+      <a href="https://youtube.com" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-youtube">▶</div>
+        </div>
+        <span class="shortcut-label">YouTube</span>
+      </a>
+
+      <!-- 8. Gemini -->
+      <a href="https://gemini.google.com" class="shortcut-item">
+        <div class="tile-box">
+          <div class="tile-icon icon-gemini">✦</div>
+        </div>
+        <span class="shortcut-label">Gemini</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom-Right Settings Button (Firefox style) -->
+  <a href="tux://settings" class="customize-btn" title="Настройки FishTux">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+  </a>
+
+  <script>
+    function onEngineSelectChange(val) {
+      localStorage.setItem('tux_search_engine', val);
+      const formEl = document.getElementById('searchForm');
+      const inputEl = document.getElementById('queryInput');
+
+      if (val === 'DuckDuckGo') {
+        if (formEl) formEl.action = 'https://duckduckgo.com/';
+        if (inputEl) inputEl.placeholder = 'Поиск в DuckDuckGo или введите адрес...';
+      } else if (val === 'Brave') {
+        if (formEl) formEl.action = 'https://search.brave.com/search';
+        if (inputEl) inputEl.placeholder = 'Поиск в Brave или введите адрес...';
+      } else if (val === 'Startpage') {
+        if (formEl) formEl.action = 'https://www.startpage.com/sp/search';
+        if (inputEl) inputEl.placeholder = 'Поиск в Startpage или введите адрес...';
+      } else {
+        if (formEl) formEl.action = 'tux://search';
+        if (inputEl) inputEl.placeholder = 'Поиск в TuxFind или введите адрес...';
+      }
+
+      // Sync backend default search engine
+      try {
+        fetch('tux://action?type=save_setting&key=search_engine&value=' + encodeURIComponent(JSON.stringify(val)));
+      } catch(e) {}
+    }
+
+    function restoreSavedEngine() {
+      const saved = localStorage.getItem('tux_search_engine') || 'TuxFind';
+      const sel = document.getElementById('engineSelect');
+      if (sel) {
+        sel.value = saved;
+        onEngineSelectChange(saved);
+      }
+    }
+    restoreSavedEngine();
+
+    let suggestTimer = null;
+    function onQueryInput(val) {
+      clearTimeout(suggestTimer);
+      const box = document.getElementById('autocompleteBox');
+      if (!val || val.trim().length < 2) {
+        if (box) box.style.display = 'none';
+        return;
+      }
+      suggestTimer = setTimeout(() => {
+        fetch('http://127.0.0.1:8080/api/v1/suggest?q=' + encodeURIComponent(val.trim()))
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.suggestions && data.suggestions.length > 0) {
+              box.innerHTML = data.suggestions.map(s => `
+                <div class="autocomplete-item" onclick="selectSuggest('${s.replace(/'/g, "\\'")}')">
+                  <span>🔍</span> ${s}
+                </div>
+              `).join('');
+              box.style.display = 'block';
+            } else {
+              box.style.display = 'none';
+            }
+          })
+          .catch(() => {
+            if (box) box.style.display = 'none';
+          });
+      }, 150);
+    }
+
+    function isDirectUrl(val) {
+      if (!val) return false;
+      const s = val.trim();
+      const schemes = ['http://', 'https://', 'tux://', 'file://', 'ftp://', 'about:'];
+      for (const scheme of schemes) {
+        if (s.startsWith(scheme)) return true;
+      }
+      if (s.includes(' ') || s.includes('\n') || s.includes('\t')) return false;
+      const domainPattern = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/;
+      const ipPattern = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?(\/.*)?$/;
+      const localhostPattern = /^localhost(:\d+)?(\/.*)?$/i;
+      return domainPattern.test(s) || ipPattern.test(s) || localhostPattern.test(s);
+    }
+
+    function resolveInputUrl(val) {
+      const s = val.trim();
+      const schemes = ['http://', 'https://', 'tux://', 'file://', 'ftp://', 'about:'];
+      for (const scheme of schemes) {
+        if (s.startsWith(scheme)) return s;
+      }
+      if (s.toLowerCase().startsWith('localhost')) return 'http://' + s;
+      return 'https://' + s;
+    }
+
+    function handleHomeSearch(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('queryInput');
+      const val = (input ? input.value : '').trim();
+      if (!val) return;
+      if (isDirectUrl(val)) {
+        window.location.href = resolveInputUrl(val);
+        return;
+      }
+      document.getElementById('searchForm').submit();
+    }
+
+    function selectSuggest(query) {
+      const input = document.getElementById('queryInput');
+      if (input) input.value = query;
+      const box = document.getElementById('autocompleteBox');
+      if (box) box.style.display = 'none';
+      handleHomeSearch();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrapper')) {
+        const box = document.getElementById('autocompleteBox');
+        if (box) box.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

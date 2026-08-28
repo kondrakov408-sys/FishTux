@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="bellyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Glow / Aura -->
+  <circle cx="64" cy="64" r="60" fill="#0f172a" stroke="#0284c7" stroke-width="2.5" stroke-dasharray="4 2" opacity="0.8"/>
+  <circle cx="64" cy="64" r="56" fill="#0b1120"/>
+  
+  <!-- Left Flipper / Wing -->
+  <path d="M 26 58 C 16 68 18 90 28 92 C 34 94 40 82 38 68 Z" fill="url(#bodyGrad)" stroke="#334155" stroke-width="1.5"/>
+  <!-- Right Flipper / Wing -->
+  <path d="M 102 58 C 112 68 110 90 100 92 C 94 94 88 82 90 68 Z" fill="url(#bodyGrad)" stroke="#334155" stroke-width="1.5"/>
+  
+  <!-- Feet -->
+  <ellipse cx="44" cy="106" rx="18" ry="8" fill="url(#goldGrad)" transform="rotate(-6 44 106)"/>
+  <ellipse cx="84" cy="106" rx="18" ry="8" fill="url(#goldGrad)" transform="rotate(6 84 106)"/>
+  
+  <!-- Main Body (Head + Torso) -->
+  <path d="M 64 20 C 44 20 34 36 34 56 C 34 76 30 98 42 104 C 52 108 76 108 86 104 C 98 98 94 76 94 56 C 94 36 84 20 64 20 Z" fill="url(#bodyGrad)" stroke="#475569" stroke-width="1.5"/>
+  
+  <!-- White Belly -->
+  <path d="M 64 48 C 50 48 42 62 42 80 C 42 98 52 103 64 103 C 76 103 86 98 86 80 C 86 62 78 48 64 48 Z" fill="url(#bellyGrad)"/>
+  
+  <!-- Eyes -->
+  <ellipse cx="53" cy="38" rx="6.5" ry="9" fill="#ffffff"/>
+  <ellipse cx="75" cy="38" rx="6.5" ry="9" fill="#ffffff"/>
+  <!-- Pupils -->
+  <ellipse cx="55" cy="38" rx="3.5" ry="4.5" fill="#0f172a"/>
+  <ellipse cx="73" cy="38" rx="3.5" ry="4.5" fill="#0f172a"/>
+  <!-- Eye highlights -->
+  <circle cx="56" cy="36" r="1.5" fill="#ffffff"/>
+  <circle cx="74" cy="36" r="1.5" fill="#ffffff"/>
+  
+  <!-- Beak -->
+  <path d="M 52 46 C 52 46 64 42 76 46 C 78 52 70 60 64 60 C 58 60 50 52 52 46 Z" fill="url(#goldGrad)" stroke="#b45309" stroke-width="1"/>
+  
+  <!-- Security Shield Emblem on Chest -->
+  <path d="M 64 68 L 74 72 L 74 80 C 74 86 64 91 64 91 C 64 91 54 86 54 80 L 54 72 Z" fill="#0f172a" stroke="#0ea5e9" stroke-width="1.5"/>
+  <path d="M 64 73 L 64 87" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 58 78 L 70 78" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
