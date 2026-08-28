@@ -367,6 +367,28 @@
 
       <div class="setting-row">
         <div class="setting-info">
+          <h4>Полная блокировка датчиков и оборудования (Zero-Sensors Shield)</h4>
+          <p>Абсолютно запрещает сайтам доступ к камере, микрофону, Bluetooth, USB, точной GPS-геолокации и гироскопам</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="block_hardware_sensors" {{CHECKED_BLOCK_HARDWARE_SENSORS}} onchange="saveSetting('block_hardware_sensors', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <h4>Звуковой сигнал при попытке слежки (Privacy Audio Chime)</h4>
+          <p>Воспроизводит футуристический звуковой сигнал при попытке сайта просканировать IP, запросить камеру, Bluetooth или геолокацию</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="privacy_sound_alerts" {{CHECKED_PRIVACY_SOUND_ALERTS}} onchange="saveSetting('privacy_sound_alerts', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
           <h4>Защита от фингерпринтинга (Canvas, WebGL & Audio)</h4>
           <p>Подмешивает незаметный шум в холст и маскирует модель GPU</p>
         </div>
@@ -537,7 +559,8 @@
       // Toggles
       const toggles = [
         'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
-        'webrtc_leak_protection', 'block_ipv6_leaks', 'anti_fingerprinting', 'strip_tracking_urls',
+        'webrtc_leak_protection', 'block_ipv6_leaks', 'privacy_sound_alerts', 'block_hardware_sensors',
+        'anti_fingerprinting', 'strip_tracking_urls',
         'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
         'clear_history_on_exit', 'clear_cache_on_exit'
       ];
@@ -636,7 +659,8 @@
       // All toggles
       const toggles = [
         'block_trackers', 'block_ads', 'https_only', 'block_third_party_cookies',
-        'webrtc_leak_protection', 'block_ipv6_leaks', 'anti_fingerprinting', 'strip_tracking_urls',
+        'webrtc_leak_protection', 'block_ipv6_leaks', 'privacy_sound_alerts', 'block_hardware_sensors',
+        'anti_fingerprinting', 'strip_tracking_urls',
         'spoof_timezone', 'kill_switch_enabled', 'do_not_track',
         'clear_history_on_exit', 'clear_cache_on_exit'
       ];

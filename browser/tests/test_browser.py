@@ -183,11 +183,22 @@ class TestTuxPrivacyFeatures(unittest.TestCase):
         self.assertIn("doNotTrack", ANTI_FINGERPRINT_JS)
         self.assertIn("toDataURL", ANTI_FINGERPRINT_JS)
         self.assertIn("getBattery", ANTI_FINGERPRINT_JS)
+        self.assertIn("getUserMedia", ANTI_FINGERPRINT_JS)
+        self.assertIn("bluetooth", ANTI_FINGERPRINT_JS)
+        self.assertIn("geolocation", ANTI_FINGERPRINT_JS)
+        self.assertIn("TuxPrivacyAlert", ANTI_FINGERPRINT_JS)
+
+    def test_alert_sound_asset_exists(self):
+        sound_path = os.path.join(BASE_DIR, "assets", "sounds", "privacy_alert.wav")
+        self.assertTrue(os.path.exists(sound_path))
+        self.assertGreater(os.path.getsize(sound_path), 1000)
 
     def test_ipv6_setting_default(self):
         temp_dir = tempfile.mkdtemp()
         storage = TuxStorage(data_dir=temp_dir)
         self.assertTrue(storage.get_setting("block_ipv6_leaks", True))
+        self.assertTrue(storage.get_setting("privacy_sound_alerts", True))
+        self.assertTrue(storage.get_setting("block_hardware_sensors", True))
         import shutil
         shutil.rmtree(temp_dir, ignore_errors=True)
 

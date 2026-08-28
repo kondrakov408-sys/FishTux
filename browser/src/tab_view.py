@@ -18,10 +18,32 @@ from PySide6.QtWidgets import QMenu
 
 
 class TuxWebEnginePage(QWebEnginePage):
-    """Custom page to handle certificate errors and window creation."""
+    """Custom page to handle certificate errors, hardware blocking, and window creation."""
 
     def __init__(self, profile: QWebEngineProfile, parent=None):
         super().__init__(profile, parent)
+        self.featurePermissionRequested.connect(self._on_feature_permission_requested)
+
+    def _on_feature_permission_requested(self, securityOrigin: QUrl, feature: QWebEnginePage.Feature):
+        # Strictly deny all invasive sensor, camera, mic, and hardware permissions
+        self.setFeaturePermission(securityOrigin, feature, QWebEnginePage.PermissionPolicy.PermissionDeniedByUser)
+        feat_name = str(feature).split(".")[-1]
+        print(f"[TuxShield] Blocked hardware permission request: {feat_name} from {securityOrigin.toString()}")
+        parent_view = self.parent()
+        if parent_view and hasattr(parent_view, "privacy_alert"):
+            origin_str = securityOrigin.host() or securityOrigin.toString()
+            parent_view.privacy_alert.emit(f"Доступ к оборудованию ({feat_name})", origin_str)
+
+    def javaScriptConsoleMessage(self, level, message, lineNumber, sourceID):
+        if message.startswith("[TuxPrivacyAlert]"):
+            reason = message.replace("[TuxPrivacyAlert]", "").strip()
+            parent_view = self.parent()
+            if parent_view and hasattr(parent_view, "privacy_alert"):
+                parsed_source = sourceID
+                if "://" in sourceID:
+                    parsed_source = urlparse(sourceID).netloc or sourceID
+                parent_view.privacy_alert.emit(reason, parsed_source)
+        super().javaScriptConsoleMessage(level, message, lineNumber, sourceID)
 
     def certificateError(self, certificateError) -> bool:
         # Strict security: block invalid certificates by default
@@ -53,6 +75,7 @@ class TuxTabView(QWebEngineView):
     load_progress = Signal(int)
     blocked_count_changed = Signal(int)
     privacy_grade_changed = Signal(str, str, str)  # grade, color, description
+    privacy_alert = Signal(str, str)  # reason, origin
 
     def __init__(self, profile: QWebEngineProfile, interceptor, storage, parent=None):
         super().__init__(parent)

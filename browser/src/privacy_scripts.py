@@ -135,10 +135,18 @@ def get_anti_fingerprint_js(
         }}
     }} catch(e) {{}}
 
-    // 4. WebRTC Leak Prevention (Total JS surface removal)
+    // 4. WebRTC Leak Prevention (Total JS surface removal & IP probe alert)
     try {{
-        delete window.RTCPeerConnection;
-        delete window.webkitRTCPeerConnection;
+        const notifyWebRTCLeak = () => {{
+            try {{ console.warn("[TuxPrivacyAlert] Попытка считывания локального/публичного IP через WebRTC STUN"); }} catch(e) {{}}
+        }};
+        const DummyRTC = function() {{
+            notifyWebRTCLeak();
+            throw new DOMException("WebRTC is disabled by Tux Shield for privacy", "NotAllowedError");
+        }};
+        DummyRTC.prototype = {{}};
+        window.RTCPeerConnection = makeNative(DummyRTC, null, 'RTCPeerConnection');
+        window.webkitRTCPeerConnection = window.RTCPeerConnection;
         delete window.RTCSessionDescription;
         delete window.RTCIceCandidate;
     }} catch(e) {{}}
@@ -413,21 +421,96 @@ def get_anti_fingerprint_js(
         }}
     }} catch(e) {{}}
 
-    // 10. Geolocation Neutralization
+    // 10. Camera, Microphone & Screen Capture Complete Lockdown
+    try {{
+        if (navigator.mediaDevices) {{
+            const blockMedia = (actionName) => {{
+                try {{ console.warn(`[TuxPrivacyAlert] Попытка доступа к ${{actionName}}`); }} catch(e) {{}}
+                return Promise.reject(new DOMException(`Access to ${{actionName}} is blocked by Tux Shield`, "NotAllowedError"));
+            }};
+            navigator.mediaDevices.getUserMedia = makeNative(function() {{ return blockMedia("Камере / Микрофону"); }}, null, 'getUserMedia');
+            navigator.mediaDevices.getDisplayMedia = makeNative(function() {{ return blockMedia("Захвату экрана"); }}, null, 'getDisplayMedia');
+            navigator.mediaDevices.enumerateDevices = makeNative(function() {{ return Promise.resolve([]); }}, null, 'enumerateDevices');
+            if (navigator.mediaDevices.selectAudioOutput) {{
+                navigator.mediaDevices.selectAudioOutput = makeNative(function() {{ return blockMedia("Аудиоустройствам"); }}, null, 'selectAudioOutput');
+            }}
+        }}
+        delete navigator.getUserMedia;
+        delete navigator.webkitGetUserMedia;
+        delete navigator.mozGetUserMedia;
+    }} catch(e) {{}}
+
+    // 11. Bluetooth, USB, HID, Serial & NFC Complete Lockdown
+    try {{
+        const blockHardware = (type) => {{
+            try {{ console.warn(`[TuxPrivacyAlert] Попытка подключения к ${{type}}`); }} catch(e) {{}}
+            return Promise.reject(new DOMException(`${{type}} is disabled by Tux Shield for security`, "NotAllowedError"));
+        }};
+        if (navigator.bluetooth) {{
+            navigator.bluetooth.requestDevice = makeNative(function() {{ return blockHardware("Bluetooth"); }}, null, 'requestDevice');
+            navigator.bluetooth.getAvailability = makeNative(function() {{ return Promise.resolve(false); }}, null, 'getAvailability');
+        }}
+        if (navigator.usb) {{
+            navigator.usb.requestDevice = makeNative(function() {{ return blockHardware("USB-устройствам"); }}, null, 'requestDevice');
+            navigator.usb.getDevices = makeNative(function() {{ return Promise.resolve([]); }}, null, 'getDevices');
+        }}
+        if (navigator.hid) {{
+            navigator.hid.requestDevice = makeNative(function() {{ return blockHardware("HID-устройствам"); }}, null, 'requestDevice');
+            navigator.hid.getDevices = makeNative(function() {{ return Promise.resolve([]); }}, null, 'getDevices');
+        }}
+        if (navigator.serial) {{
+            navigator.serial.requestPort = makeNative(function() {{ return blockHardware("Serial COM порту"); }}, null, 'requestPort');
+            navigator.serial.getPorts = makeNative(function() {{ return Promise.resolve([]); }}, null, 'getPorts');
+        }}
+        delete window.NDEFReader;
+        delete navigator.nfc;
+        delete navigator.xr;
+        delete navigator.requestMIDIAccess;
+    }} catch(e) {{}}
+
+    // 12. Geolocation Precision Lockdown & Alert
     try {{
         if (navigator.geolocation) {{
-            navigator.geolocation.getCurrentPosition = function(success, error, options) {{
+            navigator.geolocation.getCurrentPosition = makeNative(function(success, error, options) {{
+                try {{ console.warn("[TuxPrivacyAlert] Попытка считывания точной GPS/Wi-Fi геопозиции"); }} catch(e) {{}}
                 if (error) {{
-                    error({{ code: 1, message: "User denied Geolocation" }});
+                    error({{ code: 1, message: "User denied Geolocation access via Tux Shield", PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 }});
                 }}
-            }};
-            navigator.geolocation.watchPosition = function() {{ return 0; }};
+            }}, null, 'getCurrentPosition');
+            navigator.geolocation.watchPosition = makeNative(function(success, error, options) {{
+                try {{ console.warn("[TuxPrivacyAlert] Попытка фонового отслеживания геолокации"); }} catch(e) {{}}
+                if (error) {{
+                    error({{ code: 1, message: "User denied Geolocation access via Tux Shield", PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 }});
+                }}
+                return 0;
+            }}, null, 'watchPosition');
         }}
     }} catch(e) {{}}
 
-    // 11. Battery Status Neutralization
+    // 13. Physical Sensors (Gyroscope, Accelerometer, Magnetometer, Ambient Light) Elimination
+    try {{
+        const sensorProps = [
+            'Accelerometer', 'Gyroscope', 'Magnetometer',
+            'LinearAccelerationSensor', 'AbsoluteOrientationSensor',
+            'RelativeOrientationSensor', 'AmbientLightSensor', 'GravitySensor'
+        ];
+        sensorProps.forEach(prop => {{
+            try {{ delete window[prop]; }} catch(e) {{}}
+        }});
+
+        // Intercept sensor events
+        window.addEventListener('deviceorientation', function(e) {{
+            e.stopImmediatePropagation();
+        }}, true);
+        window.addEventListener('devicemotion', function(e) {{
+            e.stopImmediatePropagation();
+        }}, true);
+    }} catch(e) {{}}
+
+    // 14. Battery Status Neutralization
     try {{
         delete Navigator.prototype.getBattery;
+        delete navigator.getBattery;
     }} catch(e) {{}}
 
 }})();

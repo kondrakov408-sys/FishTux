@@ -172,6 +172,8 @@ class TuxBrowserWindow(QMainWindow):
         self.is_incognito = is_incognito
         self.download_manager = TuxDownloadManager(self)
         self.closed_tab_history: List[str] = []
+        self.last_privacy_alert_sound_time = 0.0
+        self.alert_sound = None
 
         # Connect download handling
         self.profile.downloadRequested.connect(self.download_manager.handle_download)
@@ -510,6 +512,7 @@ class TuxBrowserWindow(QMainWindow):
         tab.load_progress.connect(self._on_load_progress)
         tab.blocked_count_changed.connect(self._on_blocked_count_changed)
         tab.privacy_grade_changed.connect(self._on_privacy_grade_changed)
+        tab.privacy_alert.connect(self._on_privacy_alert)
 
         idx = self.tab_bar.addTab(title)
         self.stack.addWidget(tab)
@@ -888,6 +891,42 @@ class TuxBrowserWindow(QMainWindow):
                     tab = self.tab_widget.widget(i)
                     if tab and hasattr(tab, "page") and tab.page():
                         tab.page().runJavaScript(js_code)
+            except Exception:
+                pass
+
+    def _on_privacy_alert(self, reason: str, origin: str):
+        """Triggered whenever a website attempts to access sensors, camera, mic, or harvest IP/fingerprints."""
+        now = time.time()
+        # Audio chime with throttling (at most 1 sound per 1.5 seconds)
+        if self.storage.get_setting("privacy_sound_alerts", True) and (now - self.last_privacy_alert_sound_time > 1.5):
+            self.last_privacy_alert_sound_time = now
+            self._play_privacy_alert_sound()
+
+        # Display warning on status bar
+        origin_text = f"на {origin}" if origin else ""
+        self.statusBar().showMessage(f"🛡️ [Tux Shield] Заблокировано считывание данных: {reason} {origin_text}", 6000)
+        print(f"[TuxShield Alert] {reason} ({origin})")
+
+    def _play_privacy_alert_sound(self):
+        """Plays the futuristic privacy alert chime."""
+        try:
+            if hasattr(self, "alert_sound") and self.alert_sound:
+                self.alert_sound.play()
+            else:
+                from PySide6.QtMultimedia import QSoundEffect
+                sound_path = os.path.join(self.assets_dir, "sounds", "privacy_alert.wav")
+                if os.path.exists(sound_path):
+                    self.alert_sound = QSoundEffect(self)
+                    self.alert_sound.setSource(QUrl.fromLocalFile(sound_path))
+                    self.alert_sound.setVolume(0.7)
+                    self.alert_sound.play()
+                else:
+                    from PySide6.QtWidgets import QApplication
+                    QApplication.beep()
+        except Exception:
+            try:
+                from PySide6.QtWidgets import QApplication
+                QApplication.beep()
             except Exception:
                 pass
 
